@@ -7,42 +7,55 @@ import {
   ChevronUpIcon
 } from '@heroicons/react/24/outline'
 
-export default function BudgetSummary({ month, income, expenses, savings }) {
+export default function BudgetSummary({ month, income, expenses, savings = 0 }) {
   const available = income - expenses - savings
   const [collapsed, setCollapsed] = useState(false)
 
+  // Meaningful visual summary items
   const summaryData = [
     {
-      label: 'Ingresos',
-      total: income,
-      used: expenses + savings,
+      label: 'Income',
+      amount: income,
+      sublabel: 'Total inflows',
       icon: BanknotesIcon,
-      colorFrom: 'from-emerald-400',
-      colorTo: 'to-emerald-600'
+      accentColor: 'text-emerald-600 dark:text-emerald-400',
+      bgColor: 'bg-emerald-50 dark:bg-emerald-950/40',
+      borderColor: 'border-emerald-200 dark:border-emerald-800/60',
+      progressPercent: income > 0 ? 100 : 0,
+      gradient: 'from-emerald-400 to-emerald-600',
     },
     {
-      label: 'Gastos',
-      total: income,
-      used: expenses,
+      label: 'Expenses',
+      amount: expenses,
+      sublabel: income > 0 ? `${Math.round((expenses / income) * 100)}% of income` : 'Total spent',
       icon: TicketIcon,
-      colorFrom: 'from-rose-400',
-      colorTo: 'to-rose-600'
+      accentColor: 'text-rose-600 dark:text-rose-400',
+      bgColor: 'bg-rose-50 dark:bg-rose-950/40',
+      borderColor: 'border-rose-200 dark:border-rose-800/60',
+      progressPercent: income > 0 ? Math.min((expenses / income) * 100, 100) : expenses > 0 ? 100 : 0,
+      gradient: 'from-rose-400 to-rose-600',
     },
     {
-      label: 'Ahorro',
-      total: income,
-      used: savings,
+      label: 'Savings',
+      amount: savings,
+      sublabel: income > 0 ? `${Math.round((savings / income) * 100)}% of income` : 'Target reserve',
       icon: CurrencyDollarIcon,
-      colorFrom: 'from-sky-400',
-      colorTo: 'to-sky-600'
+      accentColor: 'text-sky-600 dark:text-sky-400',
+      bgColor: 'bg-sky-50 dark:bg-sky-950/40',
+      borderColor: 'border-sky-200 dark:border-sky-800/60',
+      progressPercent: income > 0 ? Math.min((savings / income) * 100, 100) : 0,
+      gradient: 'from-sky-400 to-sky-600',
     },
     {
-      label: 'Disponible',
-      total: income,
-      used: income - available,
+      label: 'Available Balance',
+      amount: available,
+      sublabel: 'Net cash flow',
       icon: Squares2X2Icon,
-      colorFrom: 'from-slate-400',
-      colorTo: 'to-slate-700'
+      accentColor: available >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-600 dark:text-rose-400',
+      bgColor: available >= 0 ? 'bg-indigo-50 dark:bg-indigo-950/40' : 'bg-rose-50 dark:bg-rose-950/40',
+      borderColor: available >= 0 ? 'border-indigo-200 dark:border-indigo-800/60' : 'border-rose-200 dark:border-rose-800/60',
+      progressPercent: income > 0 ? Math.max(0, Math.min((available / income) * 100, 100)) : 0,
+      gradient: available >= 0 ? 'from-indigo-400 to-indigo-600' : 'from-rose-400 to-rose-600',
     },
   ]
 
@@ -50,14 +63,19 @@ export default function BudgetSummary({ month, income, expenses, savings }) {
     <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
-          Resumen · {month}
-        </h2>
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            Summary · {month}
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Overview of current month financial performance
+          </p>
+        </div>
 
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-1 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-          aria-label="Colapsar resumen"
+          className="p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          aria-label="Collapse summary"
         >
           <ChevronUpIcon
             className={`w-5 h-5 transition-transform duration-300 ${
@@ -67,7 +85,7 @@ export default function BudgetSummary({ month, income, expenses, savings }) {
         </button>
       </div>
 
-      {/* Contenido colapsable */}
+      {/* Collapsible Content */}
       <div
         className={`transition-all duration-300 overflow-hidden ${
           collapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
@@ -83,47 +101,59 @@ export default function BudgetSummary({ month, income, expenses, savings }) {
   )
 }
 
-function SummaryItem({ label, total, used, colorFrom, colorTo, icon: Icon }) {
-  const targetPercent = Math.min((used / total) * 100, 100)
-  const [percent, setPercent] = useState(0)
-  const [displayedUsed, setDisplayedUsed] = useState(0)
-  const [displayedRemaining, setDisplayedRemaining] = useState(total)
+function SummaryItem({
+  label,
+  amount,
+  sublabel,
+  icon: Icon,
+  accentColor,
+  bgColor,
+  borderColor,
+  progressPercent,
+  gradient,
+}) {
+  const [animatedAmount, setAnimatedAmount] = useState(0)
 
   useEffect(() => {
     let start = null
-    const duration = 1000
+    const duration = 800
 
     const step = (timestamp) => {
       if (!start) start = timestamp
       const progress = Math.min((timestamp - start) / duration, 1)
-
-      setPercent(progress * targetPercent)
-      setDisplayedUsed(Math.round(progress * used))
-      setDisplayedRemaining(Math.round(total - progress * used))
-
+      setAnimatedAmount(progress * amount)
       if (progress < 1) requestAnimationFrame(step)
     }
 
     requestAnimationFrame(step)
-  }, [used, total, targetPercent])
+  }, [amount])
 
   return (
-    <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl p-4 flex flex-col gap-3 hover:shadow-sm transition-shadow duration-300">
-      <div className="flex items-center gap-2">
-        <Icon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{label}</p>
+    <div className={`rounded-xl border ${borderColor} ${bgColor} p-4 flex flex-col justify-between gap-3 shadow-sm hover:shadow transition`}>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+          {label}
+        </span>
+        <div className={`p-2 rounded-lg bg-white/80 dark:bg-slate-800/80 shadow-xs ${accentColor}`}>
+          <Icon className="w-5 h-5" />
+        </div>
       </div>
 
-      <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+      <div>
+        <div className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+          ${animatedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </div>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          {sublabel}
+        </p>
+      </div>
+
+      {/* Modern Progress Bar */}
+      <div className="w-full bg-slate-200/70 dark:bg-slate-700/60 rounded-full h-2 overflow-hidden mt-1">
         <div
-          className={`h-3 rounded-full bg-gradient-to-r ${colorFrom} ${colorTo} transition-all duration-500`}
-          style={{ width: `${percent}%` }}
+          className={`h-2 rounded-full bg-gradient-to-r ${gradient} transition-all duration-700`}
+          style={{ width: `${progressPercent}%` }}
         />
-      </div>
-
-      <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300 mt-1 font-semibold">
-        <span>${displayedUsed.toLocaleString('es-MX')}</span>
-        <span>${displayedRemaining.toLocaleString('es-MX')}</span>
       </div>
     </div>
   )

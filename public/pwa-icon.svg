@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="finperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <linearGradient id="coinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0284c7" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <!-- Modern App Icon without dark background rectangle so it looks stunning in both light & dark themes -->
+  <!-- Wallet Back / Body -->
+  <rect x="56" y="130" width="400" height="280" rx="44" fill="url(#finperGrad)" filter="url(#shadow)"/>
+  
+  <!-- Subtle inner gradient layer -->
+  <path d="M56 180 C56 150 80 130 110 130 L402 130 C432 130 456 150 456 180 L456 240 C456 256 438 268 418 268 L94 268 C74 268 56 256 56 240 Z" fill="#38bdf8" opacity="0.3"/>
+  
+  <!-- Flap Clasp -->
+  <rect x="340" y="240" width="116" height="70" rx="20" fill="#0369a1" stroke="#38bdf8" stroke-width="4"/>
+  <circle cx="380" cy="275" r="14" fill="#ffffff"/>
+  
+  <!-- Floating Coin badge -->
+  <circle cx="256" cy="110" r="54" fill="url(#coinGrad)" stroke="#ffffff" stroke-width="6" filter="url(#shadow)"/>
+  <text x="256" y="128" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="52" font-weight="900" fill="#ffffff" text-anchor="middle">$</text>
+</svg>

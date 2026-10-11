@@ -15,22 +15,22 @@ export default function SectionFormModal({ section, isNameTaken, onSave, onClose
     e.preventDefault()
     const trimmed = name.trim()
     if (!trimmed) {
-      setError('El nombre es obligatorio.')
+      setError('Section name is required.')
       return
     }
     if (isNameTaken(trimmed, section?.id)) {
-      setError('Ya existe una sección con ese nombre.')
+      setError('A section with this name already exists.')
       return
     }
     onSave({ name: trimmed, icon, color })
   }
 
   return (
-    <Modal title={isEditing ? 'Editar sección' : 'Nueva sección'} onClose={onClose}>
+    <Modal title={isEditing ? 'Edit section' : 'New section'} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Nombre
+            Name
           </label>
           <input
             type="text"
@@ -39,9 +39,9 @@ export default function SectionFormModal({ section, isNameTaken, onSave, onClose
               setName(e.target.value)
               setError('')
             }}
-            placeholder="Ej. Ahorro"
+            placeholder="e.g. Savings, Fixed Expenses"
             autoFocus
-            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
           {error && <p className="text-sm text-rose-500 mt-1">{error}</p>}
         </div>
@@ -68,7 +68,7 @@ export default function SectionFormModal({ section, isNameTaken, onSave, onClose
 
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Icono (opcional)
+            Icon (optional)
           </label>
           <IconPicker value={icon} onChange={setIcon} />
         </div>
@@ -79,13 +79,13 @@ export default function SectionFormModal({ section, isNameTaken, onSave, onClose
             onClick={onClose}
             className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           >
-            Cancelar
+            Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 transition"
+            className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 shadow-sm transition"
           >
-            {isEditing ? 'Guardar cambios' : 'Crear sección'}
+            {isEditing ? 'Save changes' : 'Create section'}
           </button>
         </div>
       </form>

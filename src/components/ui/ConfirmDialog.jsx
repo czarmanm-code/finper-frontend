@@ -3,8 +3,8 @@ import Modal from './Modal'
 export default function ConfirmDialog({
   title,
   message,
-  confirmLabel = 'Confirmar',
-  cancelLabel = 'Cancelar',
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
   danger = false,
   onConfirm,
   onCancel,
@@ -22,8 +22,8 @@ export default function ConfirmDialog({
         </button>
         <button
           onClick={onConfirm}
-          className={`px-4 py-2 rounded-lg text-sm font-medium text-white transition ${
-            danger ? 'bg-rose-600 hover:bg-rose-500' : 'bg-indigo-600 hover:bg-indigo-500'
+          className={`px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm transition ${
+            danger ? 'bg-rose-600 hover:bg-rose-700' : 'bg-sky-600 hover:bg-sky-700'
           }`}
         >
           {confirmLabel}

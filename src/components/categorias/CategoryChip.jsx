@@ -31,7 +31,7 @@ export default function CategoryChip({ category, onEdit, onDelete, dragOverlay =
         {...attributes}
         {...listeners}
         className="p-1 text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 cursor-grab active:cursor-grabbing touch-none"
-        aria-label="Arrastrar categoría"
+        aria-label="Drag category"
       >
         <Bars2Icon className="w-4 h-4" />
       </button>
@@ -47,18 +47,24 @@ export default function CategoryChip({ category, onEdit, onDelete, dragOverlay =
         {category.name}
       </span>
 
+      {Number(category.plannedAmount) > 0 && (
+        <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-slate-200/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300">
+          ${Number(category.plannedAmount).toLocaleString('en-US')}
+        </span>
+      )}
+
       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={() => onEdit(category)}
-          className="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-400 transition"
-          aria-label="Editar categoría"
+          className="p-1 rounded text-slate-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/40 dark:hover:text-sky-400 transition"
+          aria-label="Edit category"
         >
           <PencilIcon className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => onDelete(category)}
-          className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 dark:hover:text-rose-400 transition"
-          aria-label="Eliminar categoría"
+          className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition"
+          aria-label="Delete category"
         >
           <TrashIcon className="w-3.5 h-3.5" />
         </button>

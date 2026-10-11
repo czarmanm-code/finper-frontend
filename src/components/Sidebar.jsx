@@ -22,42 +22,48 @@ export default function Sidebar({ open, onClose }) {
 
       <aside
         className={`
-          fixed inset-y-0 left-0 z-40 w-64 flex flex-col gap-8 p-6
+          fixed inset-y-0 left-0 z-40 w-64 flex flex-col p-6
           bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800
           transform transition-transform duration-300 ease-in-out
-          lg:static lg:translate-x-0 lg:flex-shrink-0
+          lg:static lg:h-screen lg:sticky lg:top-0 lg:translate-x-0 lg:flex-shrink-0
           ${open ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-              FinPer
-            </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Finanzas Personales
-            </p>
+        {/* Top: Brand Header */}
+        <div className="flex items-start justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <img src="/pwa-icon.svg" alt="PerFin logo" className="w-10 h-10 drop-shadow-sm" />
+            <div>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none">
+                PerFin
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Personal Finance
+              </p>
+            </div>
           </div>
 
           <button
             onClick={onClose}
             className="p-1 rounded-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 lg:hidden"
-            aria-label="Cerrar menú"
+            aria-label="Close menu"
           >
             <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
 
-        <nav className="flex flex-col gap-1 flex-1">
+        {/* Center: Navigation Menu (scrolls if small screen, but doesn't push theme out of view) */}
+        <nav className="flex flex-col gap-1 flex-1 overflow-y-auto">
           <MenuItem to="/" label="Dashboard" icon={HomeIcon} onNavigate={onClose} />
-          <MenuItem label="Agregar movimiento" icon={PlusCircleIcon} disabled />
-          <MenuItem label="Historial" icon={ClockIcon} disabled />
-          <MenuItem to="/categorias" label="Categorías" icon={TagIcon} onNavigate={onClose} />
-          <MenuItem label="Presupuesto" icon={WalletIcon} disabled />
+          <MenuItem label="Add movement" icon={PlusCircleIcon} disabled />
+          <MenuItem label="History" icon={ClockIcon} disabled />
+          <MenuItem to="/categorias" label="Categories" icon={TagIcon} onNavigate={onClose} />
+          <MenuItem to="/budget" label="Budget" icon={WalletIcon} onNavigate={onClose} />
         </nav>
 
-        <div className="hidden lg:flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-4">
-          <span className="text-sm text-slate-500 dark:text-slate-400">Tema</span>
+        {/* Bottom: Theme toggle pinned at bottom */}
+        <div className="pt-4 mt-auto border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+          <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Theme</span>
           <ThemeToggle />
         </div>
       </aside>
@@ -70,7 +76,7 @@ function MenuItem({ to, label, icon: Icon, disabled, onNavigate }) {
     return (
       <div
         className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-60"
-        title="Próximamente"
+        title="Coming soon"
       >
         <Icon className="w-5 h-5 flex-shrink-0" />
         <span>{label}</span>
@@ -87,7 +93,7 @@ function MenuItem({ to, label, icon: Icon, disabled, onNavigate }) {
         flex items-center gap-3 px-4 py-2.5 rounded-lg transition text-sm font-medium
         ${
           isActive
-            ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400'
+            ? 'bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400'
             : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
         }
       `}

@@ -1,0 +1,26 @@
+{
+  "name": "PerFin - Personal Finance PWA",
+  "short_name": "PerFin",
+  "description": "Personal finance management PWA: track income, expenses, budgets and savings.",
+  "theme_color": "#0284c7",
+  "background_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "48x48 72x72 96x96 128x128 256x256",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
+

@@ -45,7 +45,7 @@ export default function SectionCard({
           {...attributes}
           {...listeners}
           className="p-1 text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 cursor-grab active:cursor-grabbing touch-none"
-          aria-label="Arrastrar sección"
+          aria-label="Drag section"
         >
           <Bars2Icon className="w-5 h-5" />
         </button>
@@ -62,20 +62,20 @@ export default function SectionCard({
         </h3>
 
         <span className="text-xs text-slate-400 dark:text-slate-500">
-          {section.categories.length} categoría{section.categories.length === 1 ? '' : 's'}
+          {section.categories.length} categor{section.categories.length === 1 ? 'y' : 'ies'}
         </span>
 
         <button
           onClick={() => onEditSection(section)}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-400 transition"
-          aria-label="Editar sección"
+          className="p-1.5 rounded-lg text-slate-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/40 dark:hover:text-sky-400 transition"
+          aria-label="Edit section"
         >
           <PencilIcon className="w-4 h-4" />
         </button>
         <button
           onClick={() => onDeleteSection(section)}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 dark:hover:text-rose-400 transition"
-          aria-label="Eliminar sección"
+          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition"
+          aria-label="Delete section"
         >
           <TrashIcon className="w-4 h-4" />
         </button>
@@ -94,7 +94,7 @@ export default function SectionCard({
 
           {section.categories.length === 0 && (
             <div className="flex items-center justify-center text-sm text-slate-400 dark:text-slate-600 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg py-4">
-              Sin categorías todavía
+              No categories yet in this section
             </div>
           )}
         </div>
@@ -102,10 +102,10 @@ export default function SectionCard({
 
       <button
         onClick={() => onAddCategory(section.id)}
-        className="flex items-center justify-center gap-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg py-2 transition"
+        className="flex items-center justify-center gap-1.5 text-sm font-semibold text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/40 rounded-lg py-2 transition"
       >
         <PlusIcon className="w-4 h-4" />
-        Agregar categoría
+        Add Category
       </button>
     </div>
   )

@@ -42,7 +42,7 @@ export default function useSectionsCategories() {
     setSections((prev) => reindex(prev.filter((s) => s.id !== sectionId)))
   }
 
-  function addCategory(sectionId, { name, icon, color }) {
+  function addCategory(sectionId, { name, icon, color, plannedAmount = 0 }) {
     setSections((prev) =>
       prev.map((s) =>
         s.id === sectionId
@@ -56,6 +56,7 @@ export default function useSectionsCategories() {
                   name: name.trim(),
                   icon: icon || DEFAULT_CATEGORY_ICON,
                   color: color || '#6366f1',
+                  plannedAmount: Math.max(0, Number(plannedAmount) || 0),
                   order: s.categories.length,
                 },
               ],

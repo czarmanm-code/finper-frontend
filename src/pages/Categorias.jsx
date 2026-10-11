@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import { useState, useMemo } from 'react'
+import { PlusIcon, TagIcon } from '@heroicons/react/24/outline'
 import Sidebar from '../components/Sidebar'
 import Header from '../components/Header'
 import SectionList from '../components/categorias/SectionList'
@@ -29,6 +29,10 @@ export default function Categorias() {
   const [categoryModal, setCategoryModal] = useState(null) // { mode: 'create' | 'edit', sectionId?, category? }
   const [deleteSectionTarget, setDeleteSectionTarget] = useState(null)
   const [deleteCategoryTarget, setDeleteCategoryTarget] = useState(null)
+
+  const totalCategories = useMemo(() => {
+    return sections.reduce((sum, s) => sum + (s.categories?.length || 0), 0)
+  }, [sections])
 
   function handleSaveSection(data) {
     if (sectionModal.mode === 'edit') {
@@ -71,33 +75,48 @@ export default function Categorias() {
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col gap-6 lg:gap-8">
-          <div className="flex items-center justify-between">
+          {/* Header Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                Categorías
-              </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Organiza tus secciones y categorías para usarlas en el Presupuesto
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                  Categories & Sections
+                </h1>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800">
+                  {sections.length} Sections · {totalCategories} Categories
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Organize your financial groups, icons, colors, and spending limits
               </p>
             </div>
 
             <button
               onClick={() => setSectionModal({ mode: 'create' })}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 transition"
+              className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm transition"
             >
               <PlusIcon className="w-4 h-4" />
-              Nueva sección
+              <span>New Section</span>
             </button>
           </div>
 
           {sections.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center gap-2 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl py-16">
-              <p className="text-slate-500 dark:text-slate-400">Todavía no tienes secciones.</p>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center shadow-sm flex flex-col items-center">
+              <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/50 flex items-center justify-center text-sky-600 dark:text-sky-400 mb-4">
+                <TagIcon className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+                No Sections Yet
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-6">
+                Start structuring your personal finances by creating your first section (like Income, Fixed Expenses, or Savings).
+              </p>
               <button
                 onClick={() => setSectionModal({ mode: 'create' })}
-                className="text-indigo-600 dark:text-indigo-400 text-sm font-medium hover:underline"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-xl shadow-sm transition"
               >
-                Crea la primera
+                <PlusIcon className="w-4 h-4" />
+                <span>Create First Section</span>
               </button>
             </div>
           ) : (
@@ -138,15 +157,15 @@ export default function Categorias() {
 
       {deleteSectionTarget && (
         <ConfirmDialog
-          title="Eliminar sección"
+          title="Delete Section"
           message={
             deleteSectionTarget.categories.length > 0
-              ? `Esto eliminará también ${deleteSectionTarget.categories.length} categoría${
-                  deleteSectionTarget.categories.length === 1 ? '' : 's'
-                } dentro de "${deleteSectionTarget.name}". Esta acción no se puede deshacer.`
-              : `¿Eliminar la sección "${deleteSectionTarget.name}"?`
+              ? `This will also delete ${deleteSectionTarget.categories.length} categor${
+                  deleteSectionTarget.categories.length === 1 ? 'y' : 'ies'
+                } inside "${deleteSectionTarget.name}". This action cannot be undone.`
+              : `Delete section "${deleteSectionTarget.name}"?`
           }
-          confirmLabel="Eliminar"
+          confirmLabel="Delete"
           danger
           onConfirm={confirmDeleteSection}
           onCancel={() => setDeleteSectionTarget(null)}
@@ -155,9 +174,9 @@ export default function Categorias() {
 
       {deleteCategoryTarget && (
         <ConfirmDialog
-          title="Eliminar categoría"
-          message={`¿Eliminar la categoría "${deleteCategoryTarget.name}"? Esta acción no se puede deshacer.`}
-          confirmLabel="Eliminar"
+          title="Delete Category"
+          message={`Delete category "${deleteCategoryTarget.name}"? This action cannot be undone.`}
+          confirmLabel="Delete"
           danger
           onConfirm={confirmDeleteCategory}
           onCancel={() => setDeleteCategoryTarget(null)}

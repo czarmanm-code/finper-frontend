@@ -1,14 +1,18 @@
 import { useEffect } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 
-export default function Modal({ title, onClose, children, maxWidth = 'max-w-md' }) {
+export default function Modal({ isOpen = true, title, onClose, children, maxWidth = 'max-w-md' }) {
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === 'Escape') onClose()
     }
-    document.addEventListener('keydown', handleKeyDown)
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown)
+    }
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  }, [onClose, isOpen])
+
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -31,7 +35,7 @@ export default function Modal({ title, onClose, children, maxWidth = 'max-w-md' 
           <button
             onClick={onClose}
             className="p-1 rounded-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition"
-            aria-label="Cerrar"
+            aria-label="Close"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
