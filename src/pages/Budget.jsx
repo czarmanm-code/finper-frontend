@@ -8,6 +8,7 @@ import {
   BanknotesIcon,
   TicketIcon,
   ScaleIcon,
+  SparklesIcon,
   PlusIcon,
   PencilSquareIcon,
   TrashIcon,
@@ -18,6 +19,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { getCategoriesOfflineFirst, updateCategoryPlannedAmount } from '../services/categoriesOfflineService'
 import { getTransactionsOfflineFirst } from '../services/dashboardDataService'
+import { getAll as getLocalStorageSections } from '../services/sectionsRepository'
 import { HEROICON_MAP } from '../utils/heroicons'
 
 export default function Budget() {
@@ -109,7 +111,50 @@ export default function Budget() {
     })
   }, [budgetRows, activeTab, searchQuery])
 
-  // Overview metrics
+  // Identify savings and investment categories
+  const savingsCategoryIds = useMemo(() => {
+    const ids = new Set()
+    try {
+      const sections = getLocalStorageSections()
+      sections.forEach((sec) => {
+        const secName = sec.name?.toLowerCase() || ''
+        if (
+          secName.includes('saving') ||
+          secName.includes('ahorro') ||
+          secName.includes('invest') ||
+          secName.includes('inversión') ||
+          secName.includes('inversion')
+        ) {
+          sec.categories?.forEach((c) => {
+            ids.add(c.id)
+            if (c.serverId) ids.add(c.serverId)
+          })
+        }
+      })
+    } catch {
+      // fallback
+    }
+    return ids
+  }, [])
+
+  // Helper to determine if a budget row is savings/investment
+  const isSavingsRow = useCallback(
+    (row) => {
+      if (savingsCategoryIds.has(row.id)) return true
+      const lower = row.name.toLowerCase()
+      return (
+        lower.includes('saving') ||
+        lower.includes('ahorro') ||
+        lower.includes('invest') ||
+        lower.includes('invers') ||
+        lower.includes('emergency fund') ||
+        lower.includes('fondo de emergencia')
+      )
+    },
+    [savingsCategoryIds]
+  )
+
+  // 1. Total Planned & Actual Income
   const totalPlannedIncome = useMemo(() => {
     return budgetRows.filter((r) => r.type === 'income').reduce((sum, r) => sum + r.planned, 0)
   }, [budgetRows])
@@ -118,16 +163,35 @@ export default function Budget() {
     return budgetRows.filter((r) => r.type === 'income').reduce((sum, r) => sum + r.actual, 0)
   }, [budgetRows])
 
+  // 2. Total Planned & Actual Living Expenses (excluding savings/investments)
   const totalPlannedExpenses = useMemo(() => {
-    return budgetRows.filter((r) => r.type === 'expense').reduce((sum, r) => sum + r.planned, 0)
-  }, [budgetRows])
+    return budgetRows
+      .filter((r) => r.type === 'expense' && !isSavingsRow(r))
+      .reduce((sum, r) => sum + r.planned, 0)
+  }, [budgetRows, isSavingsRow])
 
   const totalActualExpenses = useMemo(() => {
-    return budgetRows.filter((r) => r.type === 'expense').reduce((sum, r) => sum + r.actual, 0)
-  }, [budgetRows])
+    return budgetRows
+      .filter((r) => r.type === 'expense' && !isSavingsRow(r))
+      .reduce((sum, r) => sum + r.actual, 0)
+  }, [budgetRows, isSavingsRow])
 
-  const plannedNetSavings = totalPlannedIncome - totalPlannedExpenses
-  const actualNetSavings = totalActualIncome - totalActualExpenses
+  // 3. Dedicated Planned & Actual Savings & Investments
+  const totalPlannedSavings = useMemo(() => {
+    return budgetRows
+      .filter((r) => isSavingsRow(r))
+      .reduce((sum, r) => sum + r.planned, 0)
+  }, [budgetRows, isSavingsRow])
+
+  const totalActualSavings = useMemo(() => {
+    return budgetRows
+      .filter((r) => isSavingsRow(r))
+      .reduce((sum, r) => sum + r.actual, 0)
+  }, [budgetRows, isSavingsRow])
+
+  // 4. Net Unallocated Surplus (Income minus Expenses minus Dedicated Savings)
+  const plannedUnallocated = totalPlannedIncome - totalPlannedExpenses - totalPlannedSavings
+  const actualNetBalance = totalActualIncome - totalActualExpenses - totalActualSavings
 
   const currentMonthName = new Intl.DateTimeFormat('en-US', {
     month: 'long',
@@ -250,59 +314,66 @@ export default function Budget() {
               </div>
             </div>
 
-            {/* Planned Cashflow Card */}
+            {/* Dedicated Planned Savings Card */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Projected Savings
+                  Target Savings
                 </span>
                 <div className="p-2 rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400">
+                  <SparklesIcon className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="mt-2">
+                <div className="text-2xl font-bold text-sky-600 dark:text-sky-400">
+                  ${totalPlannedSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
+                  <span>Actual Saved:</span>
+                  <span className="font-semibold text-sky-600 dark:text-sky-400">
+                    ${totalActualSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mt-3 overflow-hidden">
+                <div
+                  className="bg-sky-500 h-1.5 rounded-full transition-all duration-700"
+                  style={{
+                    width: totalPlannedSavings > 0 ? `${Math.min((totalActualSavings / totalPlannedSavings) * 100, 100)}%` : '0%',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Projected Net Margin / Remaining Balance Card */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Projected Margin
+                </span>
+                <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
                   <ScaleIcon className="w-5 h-5" />
                 </div>
               </div>
               <div className="mt-2">
                 <div
                   className={`text-2xl font-bold ${
-                    plannedNetSavings >= 0 ? 'text-sky-600 dark:text-sky-400' : 'text-rose-600 dark:text-rose-400'
+                    plannedUnallocated >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-600 dark:text-rose-400'
                   }`}
                 >
-                  ${plannedNetSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ${plannedUnallocated.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Expected income minus budgeted expenses
-                </p>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
+                  <span>Live Net Balance:</span>
+                  <span className={`font-semibold ${actualNetBalance >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                    ${actualNetBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
               </div>
               <div className="text-[11px] font-medium text-slate-400 mt-3">
                 {totalPlannedIncome > 0
-                  ? `${Math.round((plannedNetSavings / totalPlannedIncome) * 100)}% projected savings rate`
-                  : 'Set targets to estimate savings rate'}
-              </div>
-            </div>
-
-            {/* Live Net Cashflow Card */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Live Net Balance
-                </span>
-                <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
-                  <BanknotesIcon className="w-5 h-5" />
-                </div>
-              </div>
-              <div className="mt-2">
-                <div
-                  className={`text-2xl font-bold ${
-                    actualNetSavings >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-600 dark:text-rose-400'
-                  }`}
-                >
-                  ${actualNetSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Actual inflows minus actual outflows
-                </p>
-              </div>
-              <div className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mt-3">
-                Live cash flow tracked
+                  ? `${Math.round((totalPlannedSavings / totalPlannedIncome) * 100)}% savings rate planned`
+                  : 'Income minus expenses & savings'}
               </div>
             </div>
           </div>

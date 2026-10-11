@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PencilSquareIcon } from '@heroicons/react/24/outline'
 
 export default function CategoryCard({
   id,
@@ -14,18 +15,18 @@ export default function CategoryCard({
   const hasBudget = Boolean(budget && budget > 0)
 
   // Calculate percentage safely
-  const percent = hasBudget ? Math.min((spent / budget) * 100, 100) : 0
+  const percent = hasBudget
+    ? Math.min((spent / budget) * 100, 100)
+    : spent > 0
+    ? 100
+    : 0
 
   const radius = 42
   const stroke = 8
   const normalizedRadius = radius - stroke * 2
   const circumference = normalizedRadius * 2 * Math.PI
 
-  const strokeDashoffset = hasBudget
-    ? circumference - (percent / 100) * circumference
-    : spent > 0
-    ? 0 // Full circle indicator for active movements
-    : circumference
+  const strokeDashoffset = circumference - (percent / 100) * circumference
 
   const [animatedOffset, setAnimatedOffset] = useState(circumference)
 
@@ -64,19 +65,9 @@ export default function CategoryCard({
 
         {/* Center label */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          {hasBudget ? (
-            <span className="text-base font-bold text-slate-800 dark:text-slate-100">
-              {Math.round(percent)}%
-            </span>
-          ) : spent > 0 ? (
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Tracked
-            </span>
-          ) : (
-            <span className="text-sm font-semibold text-slate-400">
-              0%
-            </span>
-          )}
+          <span className="text-base font-bold text-slate-800 dark:text-slate-100">
+            {Math.round(percent)}%
+          </span>
         </div>
       </div>
 
@@ -103,10 +94,11 @@ export default function CategoryCard({
               <button
                 type="button"
                 onClick={() => onSetTarget?.({ id, name, type, budget, color, icon: Icon })}
-                className="text-[11px] font-normal text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition cursor-pointer"
+                className="inline-flex items-center gap-1 text-[11px] font-normal text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition cursor-pointer"
                 title={`Edit monthly ${isIncome ? 'expected' : 'budget'}`}
               >
-                {isIncome ? 'of expected' : 'of budget'} ✎
+                <span>{isIncome ? 'of expected' : 'of budget'}</span>
+                <PencilSquareIcon className="w-3 h-3" />
               </button>
             </>
           ) : (

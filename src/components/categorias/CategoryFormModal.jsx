@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Modal from '../ui/Modal'
+import CurrencyInput from '../ui/CurrencyInput'
 import IconPicker from './IconPicker'
 import { COLOR_PALETTE, DEFAULT_COLOR } from '../../utils/colors'
 import { DEFAULT_CATEGORY_ICON } from '../../utils/heroicons'
@@ -94,31 +95,17 @@ export default function CategoryFormModal({
           {error && <p className="text-sm text-rose-500 mt-1">{error}</p>}
         </div>
 
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-              {isIncome ? 'Monthly Expected ($)' : 'Monthly Budget ($)'}
-            </label>
-            <span className="text-xs text-slate-400">Optional</span>
-          </div>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
-            <input
-              type="number"
-              step="any"
-              min="0"
-              value={plannedAmount}
-              onChange={(e) => setPlannedAmount(e.target.value)}
-              placeholder={isIncome ? 'e.g. 66000' : 'e.g. 8000'}
-              className="w-full pl-7 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
-            />
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {isIncome
+        <CurrencyInput
+          label={isIncome ? 'Monthly Expected' : 'Monthly Budget'}
+          value={plannedAmount}
+          onChange={(val) => setPlannedAmount(String(val))}
+          helperText={
+            isIncome
               ? 'Estimated monthly income (e.g. 66,000 for bi-weekly paychecks of 33k).'
-              : 'Maximum planned spending limit for this category for the month.'}
-          </p>
-        </div>
+              : 'Maximum planned spending limit for this category for the month.'
+          }
+          size="compact"
+        />
 
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">

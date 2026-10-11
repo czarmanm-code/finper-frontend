@@ -213,3 +213,132 @@ export async function syncPendingQueue() {
   saveLocalSyncQueue(remainingLocalQueue)
   return { syncedCount, failedCount }
 }
+
+/**
+ * Updates an existing transaction across localStorage, IndexedDB, and server API.
+ */
+export async function updateTransactionOfflineFirst(transactionId, updates) {
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('finper_auth_token') : null
+  const canAttemptServer = navigator.onLine && Boolean(token)
+
+  // 1. Update in localStorage
+  let matchedServerId = null
+  const existingLocal = getLocalStoredTransactions().map((t) => {
+    if (t.serverId === transactionId || t.localId === transactionId || String(t.id) === String(transactionId)) {
+      matchedServerId = t.serverId
+      return {
+        ...t,
+        ...updates,
+        amount: updates.amount !== undefined ? Number(updates.amount) : t.amount,
+        syncStatus: canAttemptServer && (matchedServerId || transactionId) ? 'synced' : 'pending',
+      }
+    }
+    return t
+  })
+  saveLocalStoredTransactions(existingLocal)
+
+  // 2. Update in IndexedDB
+  try {
+    const database = await getDbInstance()
+    const serverMatch = await database.transactions.where('serverId').equals(transactionId).first()
+    if (serverMatch) {
+      await database.transactions.update(serverMatch.id, {
+        ...updates,
+        amount: updates.amount !== undefined ? Number(updates.amount) : serverMatch.amount,
+        syncStatus: canAttemptServer ? 'synced' : 'pending',
+      })
+    } else {
+      const localMatch = await database.transactions.where('localId').equals(transactionId).first()
+      if (localMatch) {
+        await database.transactions.update(localMatch.id, {
+          ...updates,
+          amount: updates.amount !== undefined ? Number(updates.amount) : localMatch.amount,
+        })
+      } else {
+        const idMatch = await database.transactions.get(Number(transactionId) || transactionId)
+        if (idMatch) {
+          await database.transactions.update(idMatch.id, {
+            ...updates,
+            amount: updates.amount !== undefined ? Number(updates.amount) : idMatch.amount,
+          })
+        }
+      }
+    }
+  } catch (idbErr) {
+    console.warn('[OfflineFirst] IndexedDB update error:', idbErr)
+  }
+
+  // 3. Attempt server PATCH if online
+  const serverTargetId = matchedServerId || (typeof transactionId === 'string' && transactionId.length === 24 ? transactionId : null)
+  if (canAttemptServer && serverTargetId) {
+    try {
+      await apiRequest(`/transactions/${serverTargetId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          amount: Number(updates.amount),
+          type: updates.type,
+          categoryId: updates.categoryId,
+          date: updates.date,
+          description: updates.description,
+        }),
+      })
+    } catch (err) {
+      console.warn('[OfflineFirst] Server update failed, queueing update:', err.message)
+      const localQueue = getLocalSyncQueue()
+      localQueue.push({
+        action: 'UPDATE_TRANSACTION',
+        entity: 'transactions',
+        endpoint: `/transactions/${serverTargetId}`,
+        method: 'PATCH',
+        payload: updates,
+        createdAt: new Date().toISOString(),
+        retryCount: 0,
+      })
+      saveLocalSyncQueue(localQueue)
+    }
+  }
+
+  return { id: transactionId, ...updates }
+}
+
+/**
+ * Deletes a transaction across localStorage, IndexedDB, and server API.
+ */
+export async function deleteTransactionOfflineFirst(transactionId) {
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('finper_auth_token') : null
+  const canAttemptServer = navigator.onLine && Boolean(token)
+
+  // 1. Remove from localStorage
+  const existing = getLocalStoredTransactions()
+  const target = existing.find(
+    (t) => t.serverId === transactionId || t.localId === transactionId || String(t.id) === String(transactionId)
+  )
+  const filtered = existing.filter(
+    (t) => t.serverId !== transactionId && t.localId !== transactionId && String(t.id) !== String(transactionId)
+  )
+  saveLocalStoredTransactions(filtered)
+
+  // 2. Remove from IndexedDB
+  try {
+    const database = await getDbInstance()
+    const match = await database.transactions
+      .filter((t) => t.serverId === transactionId || t.localId === transactionId || String(t.id) === String(transactionId))
+      .first()
+    if (match) {
+      await database.transactions.delete(match.id)
+    }
+  } catch (err) {
+    console.warn('[OfflineFirst] IndexedDB delete error:', err)
+  }
+
+  // 3. Server delete if online
+  const sId = target?.serverId || (typeof transactionId === 'string' && transactionId.length === 24 ? transactionId : null)
+  if (canAttemptServer && sId) {
+    try {
+      await apiRequest(`/transactions/${sId}`, { method: 'DELETE' })
+    } catch (err) {
+      console.warn('[OfflineFirst] Server delete failed:', err.message)
+    }
+  }
+}
+

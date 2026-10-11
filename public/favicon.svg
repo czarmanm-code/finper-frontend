@@ -1,12 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#6366f1"/>
-      <stop offset="100%" stop-color="#4338ca"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="16" fill="url(#g)"/>
-  <rect x="15" y="34" width="8" height="17" rx="2.5" fill="#ffffff" fill-opacity="0.85"/>
-  <rect x="28" y="23" width="8" height="28" rx="2.5" fill="#ffffff"/>
-  <rect x="41" y="14" width="8" height="37" rx="2.5" fill="#ffffff" fill-opacity="0.85"/>
+  <!-- Clean rounded icon with identical light/sky styling as Header & Sidebar -->
+  <rect width="64" height="64" rx="16" fill="#f0f9ff" stroke="#bae6fd" stroke-width="2"/>
+
+  <!-- Clean Heroicons Wallet path in brand sky blue #0284c7 -->
+  <g fill="none" stroke="#0284c7" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Wallet body -->
+    <path d="M14 23.5V44C14 46.2091 15.7909 48 18 48H46C48.2091 48 50 46.2091 50 44V27.5C50 25.2909 48.2091 23.5 46 23.5H18" />
+    <!-- Wallet top fold / card pouch -->
+    <path d="M14 23.5C14 21.2909 15.7909 19.5 18 19.5H43C44.6569 19.5 46 20.8431 46 22.5V23.5" />
+    <!-- Wallet flap -->
+    <path d="M38 31.5H48C49.1046 31.5 50 32.3954 50 33.5V40C50 41.1046 49.1046 42 48 42H38C36.8954 42 36 41.1046 36 40V33.5C36 32.3954 36.8954 31.5 38 31.5Z" />
+    <!-- Clasp pin dot -->
+    <circle cx="43" cy="36.75" r="1.5" fill="#0284c7" stroke="none" />
+  </g>
 </svg>

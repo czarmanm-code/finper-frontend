@@ -1,4 +1,4 @@
-import { Bars3Icon } from '@heroicons/react/24/outline'
+import { Bars3Icon, WalletIcon } from '@heroicons/react/24/outline'
 import ThemeToggle from './ThemeToggle'
 import { SyncStatusBar } from './SyncStatusBar'
 
@@ -15,7 +15,9 @@ export default function Header({ onMenuClick }) {
         </button>
 
         <div className="flex items-center gap-2.5">
-          <img src="/pwa-icon.svg" alt="PerFin logo" className="w-8 h-8 rounded-lg shadow-sm" />
+          <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800/80 flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-2xs">
+            <WalletIcon className="w-5 h-5" />
+          </div>
           <h1 className="text-lg font-bold text-slate-900 dark:text-white">PerFin</h1>
         </div>
       </div>

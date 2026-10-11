@@ -12,11 +12,13 @@ import { PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 import { getCategoriesOfflineFirst } from '../services/categoriesOfflineService'
 import { getTransactionsOfflineFirst } from '../services/dashboardDataService'
 import { resetMonthData } from '../services/resetDataService'
+import { getAll as getLocalStorageSections } from '../services/sectionsRepository'
 import { HEROICON_MAP } from '../utils/heroicons'
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState(null)
   const [targetModalCategory, setTargetModalCategory] = useState(null)
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
   const [categories, setCategories] = useState([])
@@ -71,9 +73,13 @@ export default function Dashboard() {
         const dateStr = tx.date ? new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Today'
         return {
           id: tx.localId || tx.serverId || tx.id,
+          localId: tx.localId,
+          serverId: tx.serverId,
+          rawDate: tx.date,
           date: dateStr,
           type: tx.type === 'income' ? 'Income' : 'Expense',
           category: cat ? cat.name : tx.categoryName || 'General',
+          categoryId: tx.categoryId,
           amount: Number(tx.amount) || 0,
           icon: cat?.icon || (tx.type === 'income' ? 'BanknotesIcon' : 'TagIcon'),
           color: cat?.color || (tx.type === 'income' ? '#10b981' : '#6366f1'),
@@ -100,13 +106,30 @@ export default function Dashboard() {
     await loadDashboardData()
   }
 
+  // Identify savings and investment categories
+  const isSavingsMovement = useCallback((m) => {
+    const catName = (m.category || '').toLowerCase()
+    return (
+      catName.includes('saving') ||
+      catName.includes('ahorro') ||
+      catName.includes('invest') ||
+      catName.includes('invers') ||
+      catName.includes('emergency fund') ||
+      catName.includes('fondo de emergencia')
+    )
+  }, [])
+
   // Compute live budget summary metrics
   const totalIncome = movements
     .filter((m) => m.type === 'Income')
     .reduce((sum, m) => sum + m.amount, 0)
 
-  const totalExpenses = movements
-    .filter((m) => m.type === 'Expense')
+  const totalLivingExpenses = movements
+    .filter((m) => m.type === 'Expense' && !isSavingsMovement(m))
+    .reduce((sum, m) => sum + m.amount, 0)
+
+  const totalSavings = movements
+    .filter((m) => isSavingsMovement(m))
     .reduce((sum, m) => sum + m.amount, 0)
 
   const currentMonthName = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date())
@@ -168,8 +191,8 @@ export default function Dashboard() {
               <BudgetSummary
                 month={currentMonthName}
                 income={totalIncome}
-                expenses={totalExpenses}
-                savings={0}
+                expenses={totalLivingExpenses}
+                savings={totalSavings}
               />
 
               {categories.length > 0 && (
@@ -179,15 +202,22 @@ export default function Dashboard() {
                 />
               )}
 
-              <MovementsList movements={movements} />
+              <MovementsList
+                movements={movements}
+                onEditTransaction={(mov) => setEditingTransaction(mov)}
+              />
             </>
           )}
         </main>
 
-        {isModalOpen && (
+        {(isModalOpen || editingTransaction) && (
           <QuickTransactionModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
+            isOpen={isModalOpen || Boolean(editingTransaction)}
+            transaction={editingTransaction}
+            onClose={() => {
+              setIsModalOpen(false)
+              setEditingTransaction(null)
+            }}
             onCreated={loadDashboardData}
           />
         )}

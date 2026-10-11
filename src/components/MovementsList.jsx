@@ -1,6 +1,7 @@
 import { HEROICON_MAP } from '../utils/heroicons'
+import { PencilSquareIcon } from '@heroicons/react/24/outline'
 
-export default function MovementsList({ movements }) {
+export default function MovementsList({ movements, onEditTransaction }) {
   return (
     <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
@@ -16,20 +17,35 @@ export default function MovementsList({ movements }) {
 
       <ul className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
         {movements.map((mov) => (
-          <MovementItem key={mov.id} {...mov} />
+          <MovementItem
+            key={mov.id}
+            movement={mov}
+            onEdit={onEditTransaction}
+            {...mov}
+          />
         ))}
       </ul>
     </section>
   )
 }
 
-function MovementItem({ date, type, category, amount, icon, color = '#3b82f6', description }) {
+function MovementItem({
+  movement,
+  onEdit,
+  date,
+  type,
+  category,
+  amount,
+  icon,
+  color = '#3b82f6',
+  description,
+}) {
   const isIncome = type === 'income' || type === 'Income' || type === 'Ingreso'
 
   const IconComponent = HEROICON_MAP[icon] || (isIncome ? HEROICON_MAP.BanknotesIcon : HEROICON_MAP.TagIcon)
 
   return (
-    <li className="flex justify-between items-center py-3.5 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 px-2 rounded-xl transition">
+    <li className="flex justify-between items-center py-3.5 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 px-2 rounded-xl transition group">
       <div className="flex items-center gap-3.5">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center shadow-xs transition"
@@ -57,15 +73,27 @@ function MovementItem({ date, type, category, amount, icon, color = '#3b82f6', d
         </div>
       </div>
 
-      <span
-        className={`font-bold text-sm tracking-tight ${
-          isIncome
-            ? 'text-emerald-600 dark:text-emerald-400'
-            : 'text-rose-600 dark:text-rose-400'
-        }`}
-      >
-        {isIncome ? '+' : '-'}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-      </span>
+      <div className="flex items-center gap-2 sm:gap-3">
+        <span
+          className={`font-bold text-sm tracking-tight ${
+            isIncome
+              ? 'text-emerald-600 dark:text-emerald-400'
+              : 'text-rose-600 dark:text-rose-400'
+          }`}
+        >
+          {isIncome ? '+' : '-'}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
+
+        {onEdit && (
+          <button
+            onClick={() => onEdit(movement)}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            title="Edit transaction date or details"
+          >
+            <PencilSquareIcon className="w-4 h-4" />
+          </button>
+        )}
+      </div>
     </li>
   )
 }

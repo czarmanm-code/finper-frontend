@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Modal from './ui/Modal'
+import CurrencyInput from './ui/CurrencyInput'
 import { HEROICON_MAP } from '../utils/heroicons'
 import { updateCategoryPlannedAmount } from '../services/categoriesOfflineService'
 
@@ -65,33 +66,22 @@ export default function SetTargetModal({ category, onClose, onTargetSaved }) {
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            {isIncome ? 'Monthly Expected Amount ($)' : 'Monthly Budget Limit ($)'}
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
-            <input
-              type="number"
-              step="any"
-              min="0"
-              autoFocus
-              value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value)
-                setError('')
-              }}
-              placeholder={isIncome ? 'e.g. 66000' : 'e.g. 8000'}
-              className="w-full pl-8 pr-3 py-2.5 text-base font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
-            />
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
-            {isIncome
+        <CurrencyInput
+          label={isIncome ? 'Monthly Expected Amount' : 'Monthly Budget Limit'}
+          value={amount}
+          onChange={(val) => {
+            setAmount(String(val))
+            setError('')
+          }}
+          helperText={
+            isIncome
               ? 'Total amount you project to receive from this category during the month (e.g. 66,000 for two paychecks of 33k).'
-              : 'The maximum spending limit you plan for this category during the month.'}
-          </p>
-          {error && <p className="text-xs text-rose-500 mt-1">{error}</p>}
-        </div>
+              : 'The maximum spending limit you plan for this category during the month.'
+          }
+          error={error}
+          autoFocus
+          size="hero"
+        />
 
         <div className="flex justify-end gap-3 mt-2">
           <button

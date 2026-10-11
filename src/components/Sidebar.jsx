@@ -1,7 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
   HomeIcon,
-  PlusCircleIcon,
   ClockIcon,
   WalletIcon,
   TagIcon,
@@ -32,7 +31,9 @@ export default function Sidebar({ open, onClose }) {
         {/* Top: Brand Header */}
         <div className="flex items-start justify-between mb-8">
           <div className="flex items-center gap-3">
-            <img src="/pwa-icon.svg" alt="PerFin logo" className="w-10 h-10 drop-shadow-sm" />
+            <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800/80 flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-2xs">
+              <WalletIcon className="w-6 h-6" />
+            </div>
             <div>
               <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none">
                 PerFin
@@ -52,13 +53,12 @@ export default function Sidebar({ open, onClose }) {
           </button>
         </div>
 
-        {/* Center: Navigation Menu (scrolls if small screen, but doesn't push theme out of view) */}
+        {/* Center: Navigation Menu */}
         <nav className="flex flex-col gap-1 flex-1 overflow-y-auto">
           <MenuItem to="/" label="Dashboard" icon={HomeIcon} onNavigate={onClose} />
-          <MenuItem label="Add movement" icon={PlusCircleIcon} disabled />
-          <MenuItem label="History" icon={ClockIcon} disabled />
-          <MenuItem to="/categorias" label="Categories" icon={TagIcon} onNavigate={onClose} />
           <MenuItem to="/budget" label="Budget" icon={WalletIcon} onNavigate={onClose} />
+          <MenuItem to="/categorias" label="Categories" icon={TagIcon} onNavigate={onClose} />
+          <MenuItem label="History" icon={ClockIcon} disabled />
         </nav>
 
         {/* Bottom: Theme toggle pinned at bottom */}
