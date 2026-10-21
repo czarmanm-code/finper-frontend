@@ -4,11 +4,16 @@ import {
   ClockIcon,
   WalletIcon,
   TagIcon,
+  UserGroupIcon,
+  ArrowRightOnRectangleIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import ThemeToggle from './ThemeToggle'
+import { useAuth } from '../context/AuthContext'
 
 export default function Sidebar({ open, onClose }) {
+  const { user, isAdmin, logout } = useAuth()
+
   return (
     <>
       {open && (
@@ -58,13 +63,48 @@ export default function Sidebar({ open, onClose }) {
           <MenuItem to="/" label="Dashboard" icon={HomeIcon} onNavigate={onClose} />
           <MenuItem to="/budget" label="Budget" icon={WalletIcon} onNavigate={onClose} />
           <MenuItem to="/categorias" label="Categories" icon={TagIcon} onNavigate={onClose} />
+          
+          {/* Admin-only Users Management */}
+          {isAdmin && (
+            <MenuItem to="/users" label="Users" icon={UserGroupIcon} onNavigate={onClose} />
+          )}
+
           <MenuItem label="History" icon={ClockIcon} disabled />
         </nav>
 
-        {/* Bottom: Theme toggle pinned at bottom */}
-        <div className="pt-4 mt-auto border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
-          <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Theme</span>
-          <ThemeToggle />
+        {/* Bottom: User Card, Logout & Theme */}
+        <div className="pt-4 mt-auto border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3 shrink-0">
+          {user && (
+            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-full bg-sky-100 dark:bg-sky-950 flex items-center justify-center text-sky-700 dark:text-sky-300 font-bold uppercase text-[11px] flex-shrink-0">
+                  {user.name ? user.name.charAt(0) : 'U'}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-slate-900 dark:text-white truncate">
+                    {user.name}
+                  </div>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">
+                    {user.role}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={logout}
+                className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg transition"
+                title="Sign out"
+              >
+                <ArrowRightOnRectangleIcon className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Theme</span>
+            <ThemeToggle />
+          </div>
         </div>
       </aside>
     </>

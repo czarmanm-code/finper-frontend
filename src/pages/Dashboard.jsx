@@ -14,8 +14,10 @@ import { getTransactionsOfflineFirst } from '../services/dashboardDataService'
 import { resetMonthData } from '../services/resetDataService'
 import { getAll as getLocalStorageSections } from '../services/sectionsRepository'
 import { HEROICON_MAP } from '../utils/heroicons'
+import { useAuth } from '../context/AuthContext'
 
 export default function Dashboard() {
+  const { isAdmin } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState(null)
@@ -159,11 +161,11 @@ export default function Dashboard() {
             </div>
 
             <div className="flex items-center gap-2.5">
-              {movements.length > 0 && (
+              {isAdmin && movements.length > 0 && (
                 <button
                   onClick={() => setIsResetConfirmOpen(true)}
                   className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xs transition"
-                  title="Reset test data for this month"
+                  title="Reset test data for this month (admin test tool)"
                 >
                   <ArrowPathIcon className="w-3.5 h-3.5" />
                   <span>Reset Month</span>

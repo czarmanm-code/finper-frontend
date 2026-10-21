@@ -4,6 +4,14 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    host: true,
+    allowedHosts: [
+      'finper.ladeconfianza.com',
+      '.ladeconfianza.com',
+      'localhost',
+    ],
+  },
   plugins: [
     react(),
     VitePWA({
