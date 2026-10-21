@@ -10,6 +10,9 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+# Local credentials & secrets
+credentials.txt
+*.credentials.txt
 *.local
 
 # Editor directories and files
