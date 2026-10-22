@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { PencilSquareIcon } from '@heroicons/react/24/outline'
+import { PencilSquareIcon, PlusIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 
 export default function CategoryCard({
   id,
@@ -14,108 +13,157 @@ export default function CategoryCard({
   const isIncome = type === 'income'
   const hasBudget = Boolean(budget && budget > 0)
 
-  // Calculate percentage safely
-  const percent = hasBudget
-    ? Math.min((spent / budget) * 100, 100)
-    : spent > 0
-    ? 100
-    : 0
+  // Real percentage calculation without artificial capping or 100% inflation
+  const rawPercent = hasBudget ? (spent / budget) * 100 : 0
+  const displayPercent = Math.round(rawPercent)
+  const barWidth = Math.min(Math.max(rawPercent, 0), 100)
 
-  const radius = 42
-  const stroke = 8
-  const normalizedRadius = radius - stroke * 2
-  const circumference = normalizedRadius * 2 * Math.PI
+  // Calculate remaining or overage
+  const remaining = budget - spent
+  const isOverBudget = !isIncome && hasBudget && spent > budget
+  const isNearLimit = !isIncome && hasBudget && rawPercent >= 85 && !isOverBudget
 
-  const strokeDashoffset = circumference - (percent / 100) * circumference
+  // Determine progress bar color based on status
+  const getProgressBarColor = () => {
+    if (isIncome) {
+      return spent >= budget && hasBudget ? '#10b981' : color
+    }
+    if (isOverBudget) return '#ef4444' // Rose / Alert
+    if (isNearLimit) return '#f59e0b' // Amber / Warning
+    return color
+  }
 
-  const [animatedOffset, setAnimatedOffset] = useState(circumference)
-
-  useEffect(() => {
-    setAnimatedOffset(strokeDashoffset)
-  }, [strokeDashoffset])
+  const barColor = getProgressBarColor()
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 flex flex-col items-center gap-3 hover:shadow-md dark:hover:border-slate-700 transition-all group">
-      <div className="relative w-28 h-28">
-        <svg height="112" width="112" className="rotate-[-90deg]">
-          {/* Background track */}
-          <circle
-            className="text-slate-200 dark:text-slate-800"
-            stroke="currentColor"
-            fill="transparent"
-            strokeWidth={stroke}
-            r={normalizedRadius}
-            cx="56"
-            cy="56"
-          />
-          {/* Progress arc */}
-          <circle
-            stroke={color}
-            fill="transparent"
-            strokeWidth={stroke}
-            strokeLinecap="round"
-            strokeDasharray={`${circumference} ${circumference}`}
-            strokeDashoffset={animatedOffset}
-            r={normalizedRadius}
-            cx="56"
-            cy="56"
-            className="transition-all duration-1000 ease-out"
-          />
-        </svg>
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-5 flex flex-col justify-between hover:shadow-md dark:hover:border-slate-700 transition-all group">
+      {/* Top Header: Category Icon, Name, Type & Edit Action */}
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3 min-w-0">
+          {Icon ? (
+            <span
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-xs"
+              style={{
+                backgroundColor: color.startsWith('#') ? `${color}18` : 'rgba(59, 130, 246, 0.12)',
+                color: color,
+              }}
+            >
+              <Icon className="w-5 h-5" />
+            </span>
+          ) : (
+            <span className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-bold text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+              {name ? name.charAt(0).toUpperCase() : 'C'}
+            </span>
+          )}
 
-        {/* Center label */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-base font-bold text-slate-800 dark:text-slate-100">
-            {Math.round(percent)}%
-          </span>
+          <div className="min-w-0">
+            <h4 className="font-semibold text-slate-900 dark:text-slate-100 text-sm truncate" title={name}>
+              {name}
+            </h4>
+            <span className="text-[11px] font-medium text-slate-400 capitalize">
+              {isIncome ? 'Expected Income' : 'Expense Category'}
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onSetTarget?.({ id, name, type, budget, color, icon: Icon })}
+          className="p-1.5 text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition shrink-0 cursor-pointer"
+          title={`Edit ${isIncome ? 'target' : 'budget'}`}
+        >
+          <PencilSquareIcon className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Main Metric: Amount Spent / Budget Target */}
+      <div className="mb-3">
+        <div className="flex items-baseline justify-between gap-2">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+              ${spent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+            {hasBudget && (
+              <span className="text-xs text-slate-400 font-medium">
+                / ${budget.toLocaleString('en-US')}
+              </span>
+            )}
+          </div>
+
+          {hasBudget && (
+            <span
+              className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                isOverBudget
+                  ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400'
+                  : isNearLimit
+                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              {displayPercent}%
+            </span>
+          )}
         </div>
       </div>
 
-      <div className="text-center flex flex-col items-center">
-        {Icon && (
-          <span
-            className="w-8 h-8 rounded-lg flex items-center justify-center mb-1.5 transition-transform group-hover:scale-105 shadow-xs"
-            style={{
-              backgroundColor: color.startsWith('#') ? `${color}20` : 'rgba(59, 130, 246, 0.1)',
-              color: color,
-            }}
-          >
-            <Icon className="w-4.5 h-4.5" />
-          </span>
+      {/* Progress Bar & Footer */}
+      <div className="space-y-2">
+        {hasBudget ? (
+          <>
+            <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700 ease-out"
+                style={{
+                  width: `${barWidth}%`,
+                  backgroundColor: barColor,
+                }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+              {isIncome ? (
+                <>
+                  <span>
+                    {remaining > 0
+                      ? `$${remaining.toLocaleString('en-US', { minimumFractionDigits: 2 })} remaining`
+                      : 'Target reached!'}
+                  </span>
+                  <span className="font-medium text-slate-600 dark:text-slate-300">
+                    {displayPercent}% of goal
+                  </span>
+                </>
+              ) : isOverBudget ? (
+                <div className="flex items-center gap-1 text-rose-600 dark:text-rose-400 font-medium">
+                  <ExclamationTriangleIcon className="w-3.5 h-3.5" />
+                  <span>
+                    ${Math.abs(remaining).toLocaleString('en-US', { minimumFractionDigits: 2 })} over budget
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <span>
+                    <strong className="font-semibold text-slate-700 dark:text-slate-200">
+                      ${remaining.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </strong>{' '}
+                    remaining
+                  </span>
+                  <span>{Math.max(0, 100 - displayPercent)}% left</span>
+                </>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => onSetTarget?.({ id, name, type, budget, color, icon: Icon })}
+              className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/30 hover:bg-sky-100 dark:hover:bg-sky-950/60 border border-sky-100 dark:border-sky-900/50 transition cursor-pointer"
+            >
+              <PlusIcon className="w-3.5 h-3.5" />
+              <span>Set {isIncome ? 'target' : 'budget limit'}</span>
+            </button>
+          </div>
         )}
-        <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{name}</p>
-        
-        <div className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5 flex flex-col items-center gap-1">
-          {hasBudget ? (
-            <>
-              <span>
-                ${spent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / ${budget.toLocaleString('en-US')}
-              </span>
-              <button
-                type="button"
-                onClick={() => onSetTarget?.({ id, name, type, budget, color, icon: Icon })}
-                className="inline-flex items-center gap-1 text-[11px] font-normal text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition cursor-pointer"
-                title={`Edit monthly ${isIncome ? 'expected' : 'budget'}`}
-              >
-                <span>{isIncome ? 'of expected' : 'of budget'}</span>
-                <PencilSquareIcon className="w-3 h-3" />
-              </button>
-            </>
-          ) : (
-            <>
-              <span>
-                ${spent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-              <button
-                type="button"
-                onClick={() => onSetTarget?.({ id, name, type, budget, color, icon: Icon })}
-                className="text-[11px] font-medium text-sky-600 dark:text-sky-400 hover:underline transition cursor-pointer"
-              >
-                + Set {isIncome ? 'target' : 'budget'}
-              </button>
-            </>
-          )}
-        </div>
       </div>
     </div>
   )
