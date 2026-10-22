@@ -558,8 +558,10 @@ export default function Budget() {
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {filteredRows.map((row) => {
-                      const IconComponent = HEROICON_MAP[row.icon] || HEROICON_MAP.TagIcon
                       const isIncome = row.type === 'income'
+                      const IconComponent =
+                        HEROICON_MAP[row.icon] ||
+                        (isIncome ? HEROICON_MAP.BanknotesIcon : HEROICON_MAP.TagIcon)
 
                       return (
                         <tr
@@ -580,7 +582,7 @@ export default function Budget() {
                                   color: row.color,
                                 }}
                               >
-                                <IconComponent className="w-4.5 h-4.5" />
+                                {IconComponent && <IconComponent className="w-4 h-4 shrink-0" />}
                               </span>
                               <div>
                                 <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
