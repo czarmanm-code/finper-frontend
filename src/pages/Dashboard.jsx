@@ -7,23 +7,23 @@ import MovementsList from '../components/MovementsList'
 import { QuickTransactionModal } from '../components/QuickTransactionModal'
 import { DashboardEmptyState } from '../components/DashboardEmptyState'
 import SetTargetModal from '../components/SetTargetModal'
-import ConfirmDialog from '../components/ui/ConfirmDialog'
-import { PlusIcon, ArrowPathIcon, TrashIcon } from '@heroicons/react/24/outline'
+import CategoryDetailSheet from '../components/CategoryDetailSheet'
+import { PlusIcon } from '@heroicons/react/24/outline'
 import { getCategories } from '../services/categoriesService'
-import { getTransactions, resetMonthData } from '../services/transactionsService'
+import { getTransactions, deleteTransaction } from '../services/transactionsService'
 import { HEROICON_MAP } from '../utils/heroicons'
-import { useAuth } from '../context/AuthContext'
 import { useDateFilter } from '../context/DateContext'
 import MonthSelector from '../components/MonthSelector'
 
 export default function Dashboard() {
-  const { isAdmin } = useAuth()
   const { monthLabel, isTransactionInSelectedMonth, selectedDate } = useDateFilter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState(null)
   const [targetModalCategory, setTargetModalCategory] = useState(null)
-  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
+  const [selectedCategoryForDetail, setSelectedCategoryForDetail] = useState(null)
+  const [defaultCategoryForNewTx, setDefaultCategoryForNewTx] = useState(null)
+  const [allMonthTransactions, setAllMonthTransactions] = useState([])
   const [categories, setCategories] = useState([])
   const [movements, setMovements] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -103,6 +103,7 @@ export default function Dashboard() {
 
       setCategories(categoriesToShow)
       setMovements(mappedMovements)
+      setAllMonthTransactions(currentMonthTxs)
     } catch (err) {
       console.error('Failed to load dashboard data:', err)
     } finally {
@@ -113,12 +114,6 @@ export default function Dashboard() {
   useEffect(() => {
     loadDashboardData()
   }, [loadDashboardData])
-
-  const handleResetData = async () => {
-    await resetMonthData()
-    setIsResetConfirmOpen(false)
-    await loadDashboardData()
-  }
 
   // Identify savings and investment categories
   const isSavingsMovement = useCallback((m) => {
@@ -190,19 +185,8 @@ export default function Dashboard() {
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
-              <MonthSelector />
-
-              {isAdmin && movements.length > 0 && (
-                <button
-                  onClick={() => setIsResetConfirmOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xs transition cursor-pointer"
-                  title="Admin Tool: Clear all test transactions for this month"
-                >
-                  <TrashIcon className="w-3.5 h-3.5 text-rose-500" />
-                  <span>Clear Month Data</span>
-                </button>
-              )}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <MonthSelector className="w-full sm:w-auto" />
             </div>
           </div>
 
@@ -223,6 +207,7 @@ export default function Dashboard() {
                 <CategoriesOverview
                   categories={categories}
                   onSetTarget={(cat) => setTargetModalCategory(cat)}
+                  onSelectCategory={(cat) => setSelectedCategoryForDetail(cat)}
                 />
               )}
 
@@ -239,42 +224,63 @@ export default function Dashboard() {
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className="fixed bottom-6 right-6 z-30 sm:hidden w-12 h-12 rounded-full text-white bg-sky-600 hover:bg-sky-700 active:scale-95 shadow-lg flex items-center justify-center cursor-pointer transition-transform"
+          className="fixed bottom-8 right-8 z-30 sm:hidden w-14 h-14 rounded-full text-white bg-sky-600 hover:bg-sky-700 active:scale-95 shadow-2xl shadow-sky-600/40 ring-4 ring-white dark:ring-slate-900 flex items-center justify-center cursor-pointer transition-all"
+          style={{
+            bottom: 'max(2rem, calc(1rem + env(safe-area-inset-bottom)))',
+            right: 'max(2rem, calc(1.25rem + env(safe-area-inset-right)))',
+          }}
           aria-label="Add Transaction"
           title="Add Transaction"
         >
-          <PlusIcon className="w-6 h-6" />
+          <PlusIcon className="w-7 h-7" />
         </button>
 
         {(isModalOpen || editingTransaction) && (
           <QuickTransactionModal
             isOpen={isModalOpen || Boolean(editingTransaction)}
             transaction={editingTransaction}
+            defaultCategoryId={defaultCategoryForNewTx}
             onClose={() => {
               setIsModalOpen(false)
               setEditingTransaction(null)
+              setDefaultCategoryForNewTx(null)
             }}
             onCreated={loadDashboardData}
           />
         )}
+
+        {/* Drill-down Detail Sheet for Categories */}
+        <CategoryDetailSheet
+          isOpen={Boolean(selectedCategoryForDetail)}
+          onClose={() => setSelectedCategoryForDetail(null)}
+          item={selectedCategoryForDetail}
+          type="category"
+          monthLabel={monthLabel}
+          transactions={allMonthTransactions}
+          onEditTransaction={(tx) => {
+            setSelectedCategoryForDetail(null)
+            setEditingTransaction(tx)
+          }}
+          onDeleteTransaction={async (tx) => {
+            await deleteTransaction(tx.id || tx.serverId)
+            await loadDashboardData()
+          }}
+          onAddTransaction={(cat) => {
+            setSelectedCategoryForDetail(null)
+            setDefaultCategoryForNewTx(cat.id || cat.serverId)
+            setIsModalOpen(true)
+          }}
+          onEditTarget={(cat) => {
+            setSelectedCategoryForDetail(null)
+            setTargetModalCategory(cat)
+          }}
+        />
 
         {targetModalCategory && (
           <SetTargetModal
             category={targetModalCategory}
             onClose={() => setTargetModalCategory(null)}
             onTargetSaved={loadDashboardData}
-          />
-        )}
-
-        {isResetConfirmOpen && (
-          <ConfirmDialog
-            title={`Clear All Transactions for ${monthLabel}`}
-            message={`This action will permanently delete all recorded income and expense transactions for ${monthLabel}. Your categories, targets, and sections will remain intact, but all movements in this month will be permanently wiped.`}
-            confirmLabel="Delete Month Transactions"
-            danger
-            typeToConfirm="RESET"
-            onConfirm={handleResetData}
-            onCancel={() => setIsResetConfirmOpen(false)}
           />
         )}
       </div>

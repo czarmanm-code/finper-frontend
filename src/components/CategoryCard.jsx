@@ -8,7 +8,10 @@ export default function CategoryCard({
   budget = 0,
   spent = 0,
   color = '#3b82f6',
+  sectionId,
+  sectionName,
   onSetTarget,
+  onSelect,
   compact = false,
 }) {
   const isIncome = type === 'income'
@@ -38,7 +41,10 @@ export default function CategoryCard({
 
   if (compact) {
     return (
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs p-3 hover:shadow-xs dark:hover:border-slate-700 transition-all group">
+      <div
+        onClick={() => onSelect?.({ id, name, type, icon: Icon, budget, spent, color, sectionId, sectionName })}
+        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs p-3 hover:shadow-xs hover:border-sky-300 dark:hover:border-sky-700/60 transition-all group cursor-pointer"
+      >
         {/* Top: Icon, Name, and Quick Status / Edit */}
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -78,7 +84,10 @@ export default function CategoryCard({
             )}
             <button
               type="button"
-              onClick={() => onSetTarget?.({ id, name, type, budget, color, icon: Icon })}
+              onClick={(e) => {
+                e.stopPropagation()
+                onSetTarget?.({ id, name, type, budget, color, icon: Icon })
+              }}
               className="p-1 text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 rounded transition shrink-0 cursor-pointer"
               title={`Edit ${isIncome ? 'target' : 'budget'}`}
             >
@@ -132,7 +141,10 @@ export default function CategoryCard({
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-5 flex flex-col justify-between hover:shadow-md dark:hover:border-slate-700 transition-all group">
+    <div
+      onClick={() => onSelect?.({ id, name, type, icon: Icon, budget, spent, color, sectionId, sectionName })}
+      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-5 flex flex-col justify-between hover:shadow-md hover:border-sky-300 dark:hover:border-sky-700/60 transition-all group cursor-pointer"
+    >
       {/* Top Header: Category Icon, Name, Type & Edit Action */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-3 min-w-0">
@@ -164,7 +176,10 @@ export default function CategoryCard({
 
         <button
           type="button"
-          onClick={() => onSetTarget?.({ id, name, type, budget, color, icon: Icon })}
+          onClick={(e) => {
+            e.stopPropagation()
+            onSetTarget?.({ id, name, type, budget, color, icon: Icon })
+          }}
           className="p-1.5 text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition shrink-0 cursor-pointer"
           title={`Edit ${isIncome ? 'target' : 'budget'}`}
         >
@@ -252,7 +267,10 @@ export default function CategoryCard({
           <div className="pt-1">
             <button
               type="button"
-              onClick={() => onSetTarget?.({ id, name, type, budget, color, icon: Icon })}
+              onClick={(e) => {
+                e.stopPropagation()
+                onSetTarget?.({ id, name, type, budget, color, icon: Icon })
+              }}
               className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-medium text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/30 hover:bg-sky-100 dark:hover:bg-sky-950/60 border border-sky-100 dark:border-sky-900/50 transition cursor-pointer"
             >
               <PlusIcon className="w-3.5 h-3.5" />

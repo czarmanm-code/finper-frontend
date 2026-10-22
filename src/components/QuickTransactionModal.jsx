@@ -14,6 +14,8 @@ import { TrashIcon } from '@heroicons/react/24/outline'
 export function QuickTransactionModal({
   isOpen,
   transaction = null,
+  defaultCategoryId = null,
+  defaultType = 'expense',
   onClose,
   onCreated,
 }) {
@@ -61,13 +63,14 @@ export function QuickTransactionModal({
       setCategoryId(transaction.categoryId || '')
       setDate(formatDateToYMD(transaction.rawDate || transaction.date))
     } else {
-      setType('expense')
+      setType(defaultType || 'expense')
       setRawAmount('')
       setDescription('')
       setDate(formatDateToYMD(null))
+      setCategoryId(defaultCategoryId || '')
       setFeedback(null)
     }
-  }, [isOpen, transaction])
+  }, [isOpen, transaction, defaultCategoryId, defaultType])
 
   // Fetch categories whenever modal opens or transaction type changes
   useEffect(() => {

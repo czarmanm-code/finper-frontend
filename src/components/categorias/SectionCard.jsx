@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Bars2Icon, PencilIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { Bars2Icon, PencilIcon, TrashIcon, PlusIcon, QueueListIcon } from '@heroicons/react/24/outline'
 import { HEROICON_MAP, DEFAULT_SECTION_ICON } from '../../utils/heroicons'
 import CategoryChip from './CategoryChip'
 
@@ -13,6 +13,7 @@ export default function SectionCard({
   onAddCategory,
   onEditCategory,
   onDeleteCategory,
+  onInspectSection,
 }) {
   const Icon = HEROICON_MAP[section.icon] || HEROICON_MAP[DEFAULT_SECTION_ICON]
 
@@ -64,6 +65,16 @@ export default function SectionCard({
         <span className="text-xs text-slate-400 dark:text-slate-500">
           {section.categories.length} categor{section.categories.length === 1 ? 'y' : 'ies'}
         </span>
+
+        {onInspectSection && (
+          <button
+            onClick={() => onInspectSection(section)}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/40 dark:hover:text-sky-400 transition cursor-pointer"
+            title="Inspect section movements"
+          >
+            <QueueListIcon className="w-4 h-4" />
+          </button>
+        )}
 
         <button
           onClick={() => onEditSection(section)}

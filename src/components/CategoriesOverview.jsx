@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Bars3BottomLeftIcon, Squares2X2Icon } from '@heroicons/react/24/outline'
 import CategoryCard from './CategoryCard'
 
-export default function CategoriesOverview({ categories, onSetTarget }) {
+export default function CategoriesOverview({ categories, onSetTarget, onSelectCategory }) {
   const [isExpanded, setIsExpanded] = useState(() => {
     return localStorage.getItem('finper_category_view_mode') === 'detailed'
   })
@@ -70,6 +70,7 @@ export default function CategoriesOverview({ categories, onSetTarget }) {
             {...cat}
             compact={!isExpanded}
             onSetTarget={onSetTarget}
+            onSelect={onSelectCategory}
           />
         ))}
       </div>

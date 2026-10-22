@@ -11,3 +11,44 @@
     @apply font-sans;
   }
 }
+
+@keyframes sheetSlideUp {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheetSlideLeft {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes sheetBackdropFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-sheet-backdrop {
+  animation: sheetBackdropFade 0.25s ease-out forwards;
+}
+
+.animate-sheet-drawer {
+  animation: sheetSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (min-width: 640px) {
+  .animate-sheet-drawer {
+    animation: sheetSlideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}

@@ -17,9 +17,10 @@ import {
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline'
 import { getCategories, updateCategoryPlannedAmount } from '../services/categoriesService'
-import { getTransactions } from '../services/transactionsService'
+import { getTransactions, deleteTransaction } from '../services/transactionsService'
 import { HEROICON_MAP } from '../utils/heroicons'
 import MonthSelector from '../components/MonthSelector'
+import CategoryDetailSheet from '../components/CategoryDetailSheet'
 import { useDateFilter } from '../context/DateContext'
 
 export default function Budget() {
@@ -32,6 +33,9 @@ export default function Budget() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('custom') // 'custom' | 'budget-desc' | 'spent-desc' | 'alerts' | 'name'
   const [editingCategory, setEditingCategory] = useState(null)
+  const [selectedCategoryForDetail, setSelectedCategoryForDetail] = useState(null)
+  const [defaultCategoryForNewTx, setDefaultCategoryForNewTx] = useState(null)
+  const [editingTransaction, setEditingTransaction] = useState(null)
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false)
   const [clearTargetConfirm, setClearTargetConfirm] = useState(null)
 
@@ -81,6 +85,11 @@ export default function Budget() {
       })
     return map
   }, [transactions, categories, isTransactionInSelectedMonth])
+
+  // Transactions filtered for current selected month
+  const currentMonthTransactions = useMemo(() => {
+    return transactions.filter((tx) => isTransactionInSelectedMonth(tx.date))
+  }, [transactions, isTransactionInSelectedMonth])
 
   // Map category metrics
   const budgetRows = useMemo(() => {
@@ -263,8 +272,8 @@ export default function Budget() {
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
-              <MonthSelector />
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <MonthSelector className="w-full sm:w-auto" />
             </div>
           </div>
 
@@ -558,10 +567,14 @@ export default function Budget() {
                           className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition group"
                         >
                           {/* Category Column */}
-                          <td className="py-3.5 px-4 sm:px-6">
+                          <td
+                            className="py-3.5 px-4 sm:px-6 cursor-pointer"
+                            onClick={() => setSelectedCategoryForDetail(row)}
+                            title={`Inspect ${row.name} transactions`}
+                          >
                             <div className="flex items-center gap-3">
                               <span
-                                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105"
                                 style={{
                                   backgroundColor: `${row.color}18`,
                                   color: row.color,
@@ -570,7 +583,7 @@ export default function Budget() {
                                 <IconComponent className="w-4.5 h-4.5" />
                               </span>
                               <div>
-                                <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
+                                <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                                   {row.name}
                                 </p>
                                 <span className="text-[11px] capitalize text-slate-400">
@@ -720,11 +733,15 @@ export default function Budget() {
         <button
           type="button"
           onClick={() => setIsTransactionModalOpen(true)}
-          className="fixed bottom-6 right-6 z-30 sm:hidden w-12 h-12 rounded-full text-white bg-sky-600 hover:bg-sky-700 active:scale-95 shadow-lg flex items-center justify-center cursor-pointer transition-transform"
+          className="fixed bottom-8 right-8 z-30 sm:hidden w-14 h-14 rounded-full text-white bg-sky-600 hover:bg-sky-700 active:scale-95 shadow-2xl shadow-sky-600/40 ring-4 ring-white dark:ring-slate-900 flex items-center justify-center cursor-pointer transition-all"
+          style={{
+            bottom: 'max(2rem, calc(1rem + env(safe-area-inset-bottom)))',
+            right: 'max(2rem, calc(1.25rem + env(safe-area-inset-right)))',
+          }}
           aria-label="Add Movement"
           title="Add Movement"
         >
-          <PlusIcon className="w-6 h-6" />
+          <PlusIcon className="w-7 h-7" />
         </button>
 
         {/* Edit Target / Budget Modal */}
@@ -737,13 +754,46 @@ export default function Budget() {
         )}
 
         {/* Quick Transaction Modal */}
-        {isTransactionModalOpen && (
+        {(isTransactionModalOpen || editingTransaction) && (
           <QuickTransactionModal
-            isOpen={isTransactionModalOpen}
-            onClose={() => setIsTransactionModalOpen(false)}
+            isOpen={isTransactionModalOpen || Boolean(editingTransaction)}
+            transaction={editingTransaction}
+            defaultCategoryId={defaultCategoryForNewTx}
+            onClose={() => {
+              setIsTransactionModalOpen(false)
+              setEditingTransaction(null)
+              setDefaultCategoryForNewTx(null)
+            }}
             onCreated={loadBudgetData}
           />
         )}
+
+        {/* Category Drill-down Detail Sheet */}
+        <CategoryDetailSheet
+          isOpen={Boolean(selectedCategoryForDetail)}
+          onClose={() => setSelectedCategoryForDetail(null)}
+          item={selectedCategoryForDetail}
+          type="category"
+          monthLabel={monthLabel}
+          transactions={currentMonthTransactions}
+          onEditTransaction={(tx) => {
+            setSelectedCategoryForDetail(null)
+            setEditingTransaction(tx)
+          }}
+          onDeleteTransaction={async (tx) => {
+            await deleteTransaction(tx.id || tx.serverId)
+            await loadBudgetData()
+          }}
+          onAddTransaction={(cat) => {
+            setSelectedCategoryForDetail(null)
+            setDefaultCategoryForNewTx(cat.id || cat.serverId)
+            setIsTransactionModalOpen(true)
+          }}
+          onEditTarget={(cat) => {
+            setSelectedCategoryForDetail(null)
+            setEditingCategory(cat)
+          }}
+        />
 
         {/* Clear Target Confirmation Dialog */}
         {clearTargetConfirm && (

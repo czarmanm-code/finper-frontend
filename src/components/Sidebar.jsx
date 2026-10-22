@@ -1,10 +1,11 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, Link } from 'react-router-dom'
 import {
   HomeIcon,
   ClockIcon,
   WalletIcon,
   TagIcon,
   UserGroupIcon,
+  Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
@@ -73,6 +74,8 @@ export default function Sidebar({ open, onClose }) {
             <MenuItem to="/users" label="Users" icon={UserGroupIcon} onNavigate={onClose} />
           )}
 
+          <MenuItem to="/settings" label="Settings" icon={Cog6ToothIcon} onNavigate={onClose} />
+
           <MenuItem label="History" icon={ClockIcon} disabled />
         </nav>
 
@@ -80,7 +83,12 @@ export default function Sidebar({ open, onClose }) {
         <div className="pt-4 mt-auto border-t border-slate-200 dark:border-slate-800 shrink-0">
           {user && (
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800">
-              <div className="flex items-center gap-2.5 min-w-0">
+              <Link
+                to="/settings"
+                onClick={onClose}
+                className="flex items-center gap-2.5 min-w-0 flex-1 hover:opacity-80 transition cursor-pointer"
+                title="View settings & account"
+              >
                 <div className="w-8 h-8 rounded-full bg-sky-100 dark:bg-sky-950 flex items-center justify-center text-sky-700 dark:text-sky-300 font-bold uppercase text-xs flex-shrink-0">
                   {user.name ? user.name.charAt(0) : 'U'}
                 </div>
@@ -92,16 +100,27 @@ export default function Sidebar({ open, onClose }) {
                     {user.role}
                   </div>
                 </div>
-              </div>
+              </Link>
 
-              <button
-                type="button"
-                onClick={logout}
-                className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition cursor-pointer"
-                title="Sign out"
-              >
-                <ArrowRightOnRectangleIcon className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1 shrink-0">
+                <Link
+                  to="/settings"
+                  onClick={onClose}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 rounded-lg transition cursor-pointer"
+                  title="Settings"
+                >
+                  <Cog6ToothIcon className="w-4 h-4" />
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition cursor-pointer"
+                  title="Sign out"
+                >
+                  <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
         </div>

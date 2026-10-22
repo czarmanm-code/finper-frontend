@@ -31,6 +31,7 @@ export default function SectionList({
   onAddCategory,
   onEditCategory,
   onDeleteCategory,
+  onInspectSection,
 }) {
   const [activeItem, setActiveItem] = useState(null)
 
@@ -119,6 +120,7 @@ export default function SectionList({
               onAddCategory={onAddCategory}
               onEditCategory={onEditCategory}
               onDeleteCategory={onDeleteCategory}
+              onInspectSection={onInspectSection}
             />
           ))}
         </div>

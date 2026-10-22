@@ -3,6 +3,7 @@ import Dashboard from './pages/Dashboard'
 import Categorias from './pages/Categorias'
 import Budget from './pages/Budget'
 import Users from './pages/Users'
+import Settings from './pages/Settings'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import { ThemeProvider } from './context/ThemeContext'
@@ -78,6 +79,16 @@ export default function App() {
               element={
                 <ProtectedRoute adminOnly>
                   <Users />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* User Settings & Preferences */}
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />

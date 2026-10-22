@@ -5,11 +5,17 @@ import Header from '../components/Header'
 import SectionList from '../components/categorias/SectionList'
 import SectionFormModal from '../components/categorias/SectionFormModal'
 import CategoryFormModal from '../components/categorias/CategoryFormModal'
+import CategoryDetailSheet from '../components/CategoryDetailSheet'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
 import useSectionsCategories from '../hooks/useSectionsCategories'
+import { getTransactions, deleteTransaction } from '../services/transactionsService'
+import { useDateFilter } from '../context/DateContext'
 
 export default function Categorias() {
+  const { monthLabel, isTransactionInSelectedMonth } = useDateFilter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [selectedSectionForDetail, setSelectedSectionForDetail] = useState(null)
+  const [transactions, setTransactions] = useState([])
   const {
     sections,
     loading,
@@ -56,6 +62,16 @@ export default function Categorias() {
       await addCategory(data.sectionId, data)
     }
     setCategoryModal(null)
+  }
+
+  async function handleInspectSection(section) {
+    setSelectedSectionForDetail(section)
+    try {
+      const txs = await getTransactions()
+      setTransactions(txs)
+    } catch (err) {
+      console.error('Error fetching transactions for section:', err)
+    }
   }
 
   async function confirmDeleteSection() {
@@ -135,6 +151,7 @@ export default function Categorias() {
               onAddCategory={(sectionId) => setCategoryModal({ mode: 'create', sectionId })}
               onEditCategory={(category) => setCategoryModal({ mode: 'edit', category })}
               onDeleteCategory={(category) => setDeleteCategoryTarget(category)}
+              onInspectSection={handleInspectSection}
             />
           )}
         </main>
@@ -187,6 +204,21 @@ export default function Categorias() {
           onCancel={() => setDeleteCategoryTarget(null)}
         />
       )}
+
+      {/* Section Drill-down Detail Sheet */}
+      <CategoryDetailSheet
+        isOpen={Boolean(selectedSectionForDetail)}
+        onClose={() => setSelectedSectionForDetail(null)}
+        item={selectedSectionForDetail}
+        type="section"
+        monthLabel={monthLabel}
+        transactions={transactions.filter((tx) => isTransactionInSelectedMonth(tx.date))}
+        onDeleteTransaction={async (tx) => {
+          await deleteTransaction(tx.id || tx.serverId)
+          const updated = await getTransactions()
+          setTransactions(updated)
+        }}
+      />
     </div>
   )
 }
