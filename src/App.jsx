@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { DateProvider } from './context/DateContext'
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { user, isAdmin, isLoading, needsSetup } = useAuth()
@@ -38,7 +39,8 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
+        <DateProvider>
+          <BrowserRouter>
           <Routes>
             {/* Public Auth Routes */}
             <Route path="/login" element={<Login />} />
@@ -84,7 +86,8 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
-      </AuthProvider>
-    </ThemeProvider>
+      </DateProvider>
+    </AuthProvider>
+  </ThemeProvider>
   )
 }

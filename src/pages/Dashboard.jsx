@@ -13,9 +13,12 @@ import { getCategories } from '../services/categoriesService'
 import { getTransactions, resetMonthData } from '../services/transactionsService'
 import { HEROICON_MAP } from '../utils/heroicons'
 import { useAuth } from '../context/AuthContext'
+import { useDateFilter } from '../context/DateContext'
+import MonthSelector from '../components/MonthSelector'
 
 export default function Dashboard() {
   const { isAdmin } = useAuth()
+  const { monthLabel, isTransactionInSelectedMonth, selectedDate } = useDateFilter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState(null)
@@ -41,9 +44,12 @@ export default function Dashboard() {
         if (c.name) categoryMap.set(c.name.trim().toLowerCase(), c)
       })
 
-      // Aggregate spend/income per category with resilient matching
+      // Filter transactions strictly for the selected month
+      const currentMonthTxs = fetchedTxs.filter((tx) => isTransactionInSelectedMonth(tx.date))
+
+      // Aggregate spend/income per category with resilient matching for the selected month
       const catSpendMap = {}
-      fetchedTxs.forEach((tx) => {
+      currentMonthTxs.forEach((tx) => {
         const rawCatId = typeof tx.categoryId === 'object' ? (tx.categoryId?.id || tx.categoryId?._id) : tx.categoryId
         const catKey = rawCatId ? String(rawCatId) : null
         const catName = (tx.categoryName || tx.category || '').trim().toLowerCase()
@@ -55,7 +61,7 @@ export default function Dashboard() {
         }
       })
 
-      // Overview categories with lively badges and colors
+      // Overview categories with lively badges and colors (budgets persist across months)
       const overviewCategories = fetchedCats.map((cat) => {
         const catId = cat.serverId || cat.id || String(cat._id)
         const iconComponent = HEROICON_MAP[cat.icon] || HEROICON_MAP.TagIcon
@@ -76,8 +82,8 @@ export default function Dashboard() {
       const activeCategories = overviewCategories.filter((cat) => cat.spent > 0 || cat.budget > 0)
       const categoriesToShow = activeCategories.length > 0 ? activeCategories : overviewCategories
 
-      // Map recent movements with vibrant category icons and colors
-      const mappedMovements = fetchedTxs.slice(0, 10).map((tx) => {
+      // Map movements strictly for the selected month
+      const mappedMovements = currentMonthTxs.slice(0, 15).map((tx) => {
         const cat = categoryMap.get(tx.categoryId)
         const dateStr = tx.date ? new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Today'
         return {
@@ -102,7 +108,7 @@ export default function Dashboard() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [selectedDate, isTransactionInSelectedMonth])
 
   useEffect(() => {
     loadDashboardData()
@@ -158,7 +164,7 @@ export default function Dashboard() {
                   Financial Overview
                 </h1>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800">
-                  {currentMonthName}
+                  {monthLabel}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -166,11 +172,13 @@ export default function Dashboard() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <MonthSelector />
+
               {isAdmin && movements.length > 0 && (
                 <button
                   onClick={() => setIsResetConfirmOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xs transition"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xs transition cursor-pointer"
                   title="Reset test data for this month (admin test tool)"
                 >
                   <ArrowPathIcon className="w-3.5 h-3.5" />
@@ -180,7 +188,7 @@ export default function Dashboard() {
 
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm transition"
+                className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm transition cursor-pointer"
               >
                 <PlusIcon className="w-4 h-4" />
                 <span>Add Transaction</span>
@@ -195,7 +203,7 @@ export default function Dashboard() {
           ) : (
             <>
               <BudgetSummary
-                month={currentMonthName}
+                month={monthLabel}
                 income={totalIncome}
                 expenses={totalLivingExpenses}
                 savings={totalSavings}
@@ -210,6 +218,7 @@ export default function Dashboard() {
 
               <MovementsList
                 movements={movements}
+                monthName={monthLabel}
                 onEditTransaction={(mov) => setEditingTransaction(mov)}
               />
             </>

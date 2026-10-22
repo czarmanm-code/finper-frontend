@@ -68,7 +68,7 @@ export default function BudgetSummary({ month, income, expenses, savings = 0 }) 
             Summary · {month}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Overview of current month financial performance
+            {month ? `Overview of financial performance for ${month}` : 'Overview of monthly financial performance'}
           </p>
         </div>
 

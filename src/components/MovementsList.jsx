@@ -1,7 +1,7 @@
 import { HEROICON_MAP } from '../utils/heroicons'
 import { PencilSquareIcon } from '@heroicons/react/24/outline'
 
-export default function MovementsList({ movements, onEditTransaction }) {
+export default function MovementsList({ movements, onEditTransaction, monthName }) {
   return (
     <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
@@ -10,14 +10,14 @@ export default function MovementsList({ movements, onEditTransaction }) {
             Recent Movements
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Your latest logged transactions
+            {monthName ? `Logged transactions for ${monthName}` : 'Your latest logged transactions'}
           </p>
         </div>
       </div>
 
       {movements.length === 0 ? (
         <div className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">
-          No transactions recorded yet this month. Click &quot;Add Transaction&quot; above to log an expense or income.
+          No transactions recorded yet in {monthName || 'this month'}. Click &quot;Add Transaction&quot; above to log an expense or income.
         </div>
       ) : (
         <ul className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
