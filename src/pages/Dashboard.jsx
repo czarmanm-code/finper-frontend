@@ -9,10 +9,8 @@ import { DashboardEmptyState } from '../components/DashboardEmptyState'
 import SetTargetModal from '../components/SetTargetModal'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
 import { PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
-import { getCategoriesOfflineFirst } from '../services/categoriesOfflineService'
-import { getTransactionsOfflineFirst } from '../services/dashboardDataService'
-import { resetMonthData } from '../services/resetDataService'
-import { getAll as getLocalStorageSections } from '../services/sectionsRepository'
+import { getCategories } from '../services/categoriesService'
+import { getTransactions, resetMonthData } from '../services/transactionsService'
 import { HEROICON_MAP } from '../utils/heroicons'
 import { useAuth } from '../context/AuthContext'
 
@@ -30,52 +28,60 @@ export default function Dashboard() {
   const loadDashboardData = useCallback(async () => {
     try {
       const [fetchedCats, fetchedTxs] = await Promise.all([
-        getCategoriesOfflineFirst(),
-        getTransactionsOfflineFirst(),
+        getCategories(),
+        getTransactions(),
       ])
 
       // Map categories for quick lookups
       const categoryMap = new Map()
       fetchedCats.forEach((c) => {
-        const key = c.serverId || c.id || String(c._id)
-        categoryMap.set(key, c)
+        if (c.serverId) categoryMap.set(String(c.serverId), c)
+        if (c.id) categoryMap.set(String(c.id), c)
+        if (c._id) categoryMap.set(String(c._id), c)
+        if (c.name) categoryMap.set(c.name.trim().toLowerCase(), c)
       })
 
-      // Aggregate spend/income per category
+      // Aggregate spend/income per category with resilient matching
       const catSpendMap = {}
       fetchedTxs.forEach((tx) => {
-        const catKey = tx.categoryId
-        if (!catSpendMap[catKey]) catSpendMap[catKey] = 0
-        catSpendMap[catKey] += Number(tx.amount) || 0
+        const rawCatId = typeof tx.categoryId === 'object' ? (tx.categoryId?.id || tx.categoryId?._id) : tx.categoryId
+        const catKey = rawCatId ? String(rawCatId) : null
+        const catName = (tx.categoryName || tx.category || '').trim().toLowerCase()
+        const matchedCat = (catKey && categoryMap.get(catKey)) || (catName && categoryMap.get(catName))
+
+        const primaryId = matchedCat ? (matchedCat.serverId || matchedCat.id || String(matchedCat._id)) : catKey
+        if (primaryId) {
+          catSpendMap[primaryId] = (catSpendMap[primaryId] || 0) + (Number(tx.amount) || 0)
+        }
       })
 
-      // Overview categories with lively badges and colors, filtered to active or planned
-      const overviewCategories = fetchedCats
-        .map((cat) => {
-          const catId = cat.serverId || cat.id || String(cat._id)
-          const iconComponent = HEROICON_MAP[cat.icon] || HEROICON_MAP.TagIcon
-          const recordedAmount = catSpendMap[catId] || 0
-          const plannedBudget = Number(cat.plannedAmount) || 0
+      // Overview categories with lively badges and colors
+      const overviewCategories = fetchedCats.map((cat) => {
+        const catId = cat.serverId || cat.id || String(cat._id)
+        const iconComponent = HEROICON_MAP[cat.icon] || HEROICON_MAP.TagIcon
+        const recordedAmount = catSpendMap[catId] || 0
+        const plannedBudget = Number(cat.plannedAmount) || 0
 
-          return {
-            id: catId,
-            name: cat.name,
-            type: cat.type,
-            icon: iconComponent,
-            budget: plannedBudget,
-            spent: recordedAmount,
-            color: cat.color || '#3b82f6',
-          }
-        })
-        .filter((cat) => cat.spent > 0 || cat.budget > 0)
+        return {
+          id: catId,
+          name: cat.name,
+          type: cat.type,
+          icon: iconComponent,
+          budget: plannedBudget,
+          spent: recordedAmount,
+          color: cat.color || '#3b82f6',
+        }
+      })
+
+      const activeCategories = overviewCategories.filter((cat) => cat.spent > 0 || cat.budget > 0)
+      const categoriesToShow = activeCategories.length > 0 ? activeCategories : overviewCategories
 
       // Map recent movements with vibrant category icons and colors
       const mappedMovements = fetchedTxs.slice(0, 10).map((tx) => {
         const cat = categoryMap.get(tx.categoryId)
         const dateStr = tx.date ? new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Today'
         return {
-          id: tx.localId || tx.serverId || tx.id,
-          localId: tx.localId,
+          id: tx.serverId || tx.id,
           serverId: tx.serverId,
           rawDate: tx.date,
           date: dateStr,
@@ -89,7 +95,7 @@ export default function Dashboard() {
         }
       })
 
-      setCategories(overviewCategories)
+      setCategories(categoriesToShow)
       setMovements(mappedMovements)
     } catch (err) {
       console.error('Failed to load dashboard data:', err)
@@ -186,8 +192,6 @@ export default function Dashboard() {
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center text-sm text-slate-500">
               Loading your finances...
             </div>
-          ) : movements.length === 0 ? (
-            <DashboardEmptyState onAddTransaction={() => setIsModalOpen(true)} />
           ) : (
             <>
               <BudgetSummary

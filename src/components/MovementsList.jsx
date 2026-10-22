@@ -15,16 +15,22 @@ export default function MovementsList({ movements, onEditTransaction }) {
         </div>
       </div>
 
-      <ul className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
-        {movements.map((mov) => (
-          <MovementItem
-            key={mov.id}
-            movement={mov}
-            onEdit={onEditTransaction}
-            {...mov}
-          />
-        ))}
-      </ul>
+      {movements.length === 0 ? (
+        <div className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">
+          No transactions recorded yet this month. Click &quot;Add Transaction&quot; above to log an expense or income.
+        </div>
+      ) : (
+        <ul className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
+          {movements.map((mov) => (
+            <MovementItem
+              key={mov.id}
+              movement={mov}
+              onEdit={onEditTransaction}
+              {...mov}
+            />
+          ))}
+        </ul>
+      )}
     </section>
   )
 }

@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { apiRequest } from '../services/api'
-import { getDbInstance } from '../services/db'
 
 const AuthContext = createContext(null)
 
@@ -14,47 +13,51 @@ const DEFAULT_LOCAL_ADMIN = {
 }
 
 export function AuthProvider({ children }) {
-  // If the user hasn't explicitly logged in, default gracefully to the primary local admin
-  // so existing IndexedDB and offline transactions are seamlessly accessible without lockouts
+  const [token, setToken] = useState(() => localStorage.getItem('finper_auth_token'))
   const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('finper_current_user')
-    if (stored) {
+    const storedToken = localStorage.getItem('finper_auth_token')
+    const storedUser = localStorage.getItem('finper_current_user')
+    if (storedToken && storedUser) {
       try {
-        return JSON.parse(stored)
+        return JSON.parse(storedUser)
       } catch {
-        return DEFAULT_LOCAL_ADMIN
+        return null
       }
     }
-    return DEFAULT_LOCAL_ADMIN
+    return null
   })
 
-  const [token, setToken] = useState(() => localStorage.getItem('finper_auth_token'))
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(Boolean(token))
   const [needsSetup, setNeedsSetup] = useState(false)
 
   // Verify online auth if backend is reachable
   const checkAuth = useCallback(async () => {
     const storedToken = localStorage.getItem('finper_auth_token')
     if (!storedToken) {
-      // Keep local admin session active so offline data is never locked
-      if (!user) {
-        setUser(DEFAULT_LOCAL_ADMIN)
-        localStorage.setItem('finper_current_user', JSON.stringify(DEFAULT_LOCAL_ADMIN))
-      }
+      setUser(null)
+      setIsLoading(false)
       return
     }
 
     try {
+      setIsLoading(true)
       const profileRes = await apiRequest('/auth/me')
       if (profileRes?.user) {
         setUser(profileRes.user)
         localStorage.setItem('finper_current_user', JSON.stringify(profileRes.user))
       }
     } catch (err) {
-      // Backend not running or token expired: retain active local session gracefully
-      console.warn('[AuthContext] Verification failed, staying in offline session:', err.message)
+      console.warn('[AuthContext] Verification failed:', err.message)
+      if (err.status === 401 || err.status === 403) {
+        localStorage.removeItem('finper_auth_token')
+        localStorage.removeItem('finper_current_user')
+        setToken(null)
+        setUser(null)
+      }
+    } finally {
+      setIsLoading(false)
     }
-  }, [user])
+  }, [])
 
   useEffect(() => {
     checkAuth()

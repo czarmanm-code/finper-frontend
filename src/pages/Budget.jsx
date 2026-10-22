@@ -17,8 +17,8 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline'
-import { getCategoriesOfflineFirst, updateCategoryPlannedAmount } from '../services/categoriesOfflineService'
-import { getTransactionsOfflineFirst } from '../services/dashboardDataService'
+import { getCategories, updateCategoryPlannedAmount } from '../services/categoriesService'
+import { getTransactions } from '../services/transactionsService'
 import { getAll as getLocalStorageSections } from '../services/sectionsRepository'
 import { HEROICON_MAP } from '../utils/heroicons'
 
@@ -33,12 +33,12 @@ export default function Budget() {
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false)
   const [clearTargetConfirm, setClearTargetConfirm] = useState(null)
 
-  // Fetch live categories and movements
+  // Fetch live categories and movements directly from MongoDB API
   const loadBudgetData = useCallback(async () => {
     try {
       const [fetchedCats, fetchedTxs] = await Promise.all([
-        getCategoriesOfflineFirst(),
-        getTransactionsOfflineFirst(),
+        getCategories(),
+        getTransactions(),
       ])
       setCategories(fetchedCats)
       setTransactions(fetchedTxs)
@@ -53,16 +53,30 @@ export default function Budget() {
     loadBudgetData()
   }, [loadBudgetData])
 
-  // Aggregate current month transactions per category
+  // Aggregate current month transactions per category with resilient matching
   const actualPerCategory = useMemo(() => {
     const map = {}
+    const catMap = new Map()
+    categories.forEach((c) => {
+      if (c.serverId) catMap.set(String(c.serverId), c)
+      if (c.id) catMap.set(String(c.id), c)
+      if (c._id) catMap.set(String(c._id), c)
+      if (c.name) catMap.set(c.name.trim().toLowerCase(), c)
+    })
+
     transactions.forEach((tx) => {
-      const catKey = tx.categoryId
-      if (!map[catKey]) map[catKey] = 0
-      map[catKey] += Number(tx.amount) || 0
+      const rawCatId = typeof tx.categoryId === 'object' ? (tx.categoryId?.id || tx.categoryId?._id) : tx.categoryId
+      const catKey = rawCatId ? String(rawCatId) : null
+      const catName = (tx.categoryName || tx.category || '').trim().toLowerCase()
+      const matchedCat = (catKey && catMap.get(catKey)) || (catName && catMap.get(catName))
+
+      const primaryId = matchedCat ? (matchedCat.serverId || matchedCat.id || String(matchedCat._id)) : catKey
+      if (primaryId) {
+        map[primaryId] = (map[primaryId] || 0) + (Number(tx.amount) || 0)
+      }
     })
     return map
-  }, [transactions])
+  }, [transactions, categories])
 
   // Map category metrics
   const budgetRows = useMemo(() => {

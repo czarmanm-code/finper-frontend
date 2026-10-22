@@ -2,17 +2,17 @@ import { useState } from 'react'
 import Modal from './ui/Modal'
 import CurrencyInput from './ui/CurrencyInput'
 import { HEROICON_MAP } from '../utils/heroicons'
-import { updateCategoryPlannedAmount } from '../services/categoriesOfflineService'
+import { updateCategoryPlannedAmount } from '../services/categoriesService'
 
 export default function SetTargetModal({ category, onClose, onTargetSaved }) {
-  if (!category) return null
-
-  const isIncome = category.type === 'income'
-  const [amount, setAmount] = useState(
-    category.budget && category.budget > 0 ? String(category.budget) : ''
+  const isIncome = category?.type === 'income'
+  const [amount, setAmount] = useState(() =>
+    category?.budget && category.budget > 0 ? String(category.budget) : ''
   )
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
+
+  if (!category) return null
 
   const IconComponent =
     typeof category.icon === 'function'

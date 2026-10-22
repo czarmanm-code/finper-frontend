@@ -11,6 +11,26 @@ export default defineConfig({
       '.ladeconfianza.com',
       'localhost',
     ],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
+  preview: {
+    host: true,
+    allowedHosts: [
+      'finper.ladeconfianza.com',
+      '.ladeconfianza.com',
+      'localhost',
+    ],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
   },
   plugins: [
     react(),

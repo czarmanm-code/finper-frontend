@@ -4,11 +4,11 @@ import Modal from './ui/Modal'
 import ConfirmDialog from './ui/ConfirmDialog'
 import CurrencyInput from './ui/CurrencyInput'
 import {
-  createTransactionOfflineFirst,
-  updateTransactionOfflineFirst,
-  deleteTransactionOfflineFirst,
-} from '../services/transactionsOfflineService'
-import { getCategoriesOfflineFirst } from '../services/categoriesOfflineService'
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+} from '../services/transactionsService'
+import { getCategories } from '../services/categoriesService'
 import { TrashIcon } from '@heroicons/react/24/outline'
 
 export function QuickTransactionModal({
@@ -17,8 +17,6 @@ export function QuickTransactionModal({
   onClose,
   onCreated,
 }) {
-  if (!isOpen) return null
-
   const isEditing = Boolean(transaction)
 
   // Helper to format a date to YYYY-MM-DD
@@ -78,7 +76,7 @@ export function QuickTransactionModal({
     let isMounted = true
     setLoadingCategories(true)
 
-    getCategoriesOfflineFirst(type)
+    getCategories(type)
       .then((cats) => {
         if (!isMounted) return
         setCategories(cats)
@@ -124,8 +122,8 @@ export function QuickTransactionModal({
 
     try {
       if (isEditing) {
-        const targetId = transaction.localId || transaction.serverId || transaction.id
-        await updateTransactionOfflineFirst(targetId, {
+        const targetId = transaction.serverId || transaction.id
+        await updateTransaction(targetId, {
           amount: numericAmount,
           type,
           description: description.trim(),
@@ -134,18 +132,14 @@ export function QuickTransactionModal({
         })
         setFeedback('Transaction updated successfully.')
       } else {
-        const result = await createTransactionOfflineFirst({
+        await createTransaction({
           amount: numericAmount,
           type,
           description: description.trim(),
           categoryId,
           date: selectedDateISO,
         })
-        setFeedback(
-          result.isOffline
-            ? 'Transaction saved successfully (Offline mode).'
-            : 'Transaction created and synced successfully.'
-        )
+        setFeedback('Transaction created successfully.')
       }
 
       if (onCreated) {
@@ -166,8 +160,8 @@ export function QuickTransactionModal({
     if (!transaction) return
     setIsSubmitting(true)
     try {
-      const targetId = transaction.localId || transaction.serverId || transaction.id
-      await deleteTransactionOfflineFirst(targetId)
+      const targetId = transaction.serverId || transaction.id
+      await deleteTransaction(targetId)
       setConfirmDelete(false)
       if (onCreated) {
         onCreated()
@@ -179,6 +173,8 @@ export function QuickTransactionModal({
       setIsSubmitting(false)
     }
   }
+
+  if (!isOpen) return null
 
   return (
     <>
