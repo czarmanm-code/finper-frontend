@@ -12,6 +12,7 @@ export default function Categorias() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const {
     sections,
+    loading,
     addSection,
     updateSection,
     deleteSection,
@@ -34,36 +35,36 @@ export default function Categorias() {
     return sections.reduce((sum, s) => sum + (s.categories?.length || 0), 0)
   }, [sections])
 
-  function handleSaveSection(data) {
+  async function handleSaveSection(data) {
     if (sectionModal.mode === 'edit') {
-      updateSection(sectionModal.section.id, data)
+      await updateSection(sectionModal.section.id, data)
     } else {
-      addSection(data)
+      await addSection(data)
     }
     setSectionModal(null)
   }
 
-  function handleSaveCategory(data) {
+  async function handleSaveCategory(data) {
     if (categoryModal.mode === 'edit') {
       const { sectionId, ...rest } = data
       const originalSectionId = categoryModal.category.sectionId
-      updateCategory(categoryModal.category.id, rest)
+      await updateCategory(categoryModal.category.id, rest)
       if (sectionId !== originalSectionId) {
-        moveCategoryToSection(categoryModal.category.id, sectionId, null)
+        await moveCategoryToSection(categoryModal.category.id, sectionId, null)
       }
     } else {
-      addCategory(data.sectionId, data)
+      await addCategory(data.sectionId, data)
     }
     setCategoryModal(null)
   }
 
-  function confirmDeleteSection() {
-    deleteSection(deleteSectionTarget.id)
+  async function confirmDeleteSection() {
+    await deleteSection(deleteSectionTarget.id)
     setDeleteSectionTarget(null)
   }
 
-  function confirmDeleteCategory() {
-    deleteCategory(deleteCategoryTarget.id)
+  async function confirmDeleteCategory() {
+    await deleteCategory(deleteCategoryTarget.id)
     setDeleteCategoryTarget(null)
   }
 
@@ -100,7 +101,11 @@ export default function Categorias() {
             </button>
           </div>
 
-          {sections.length === 0 ? (
+          {loading ? (
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center shadow-sm">
+              <p className="text-sm text-slate-400">Loading categories...</p>
+            </div>
+          ) : sections.length === 0 ? (
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center shadow-sm flex flex-col items-center">
               <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/50 flex items-center justify-center text-sky-600 dark:text-sky-400 mb-4">
                 <TagIcon className="w-6 h-6" />

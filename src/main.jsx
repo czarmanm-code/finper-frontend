@@ -7,6 +7,13 @@ import '@fontsource/inter/700.css'
 import './index.css'
 import App from './App.jsx'
 
+// Purge legacy offline-first storage keys if present
+if (typeof localStorage !== 'undefined') {
+  localStorage.removeItem('finper-sections')
+  localStorage.removeItem('finper-offline-transactions')
+  localStorage.removeItem('finper-offline-sync-queue')
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />

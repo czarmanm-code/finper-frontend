@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import Modal from '../ui/Modal'
-import CurrencyInput from '../ui/CurrencyInput'
 import IconPicker from './IconPicker'
 import { COLOR_PALETTE, DEFAULT_COLOR } from '../../utils/colors'
 import { DEFAULT_CATEGORY_ICON } from '../../utils/heroicons'
@@ -18,17 +17,7 @@ export default function CategoryFormModal({
   const [icon, setIcon] = useState(category?.icon ?? DEFAULT_CATEGORY_ICON)
   const [color, setColor] = useState(category?.color ?? DEFAULT_COLOR)
   const [sectionId, setSectionId] = useState(category?.sectionId ?? defaultSectionId ?? sections[0]?.id ?? '')
-  const [plannedAmount, setPlannedAmount] = useState(
-    category?.plannedAmount !== undefined && category?.plannedAmount > 0 ? String(category.plannedAmount) : ''
-  )
   const [error, setError] = useState('')
-
-  const currentSection = sections.find((s) => s.id === sectionId)
-  const isIncome =
-    currentSection?.name?.toLowerCase().includes('income') ||
-    currentSection?.name?.toLowerCase().includes('salary') ||
-    currentSection?.name?.toLowerCase().includes('ingreso') ||
-    category?.type === 'income'
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -50,7 +39,6 @@ export default function CategoryFormModal({
       icon,
       color,
       sectionId,
-      plannedAmount: plannedAmount ? Math.max(0, parseFloat(plannedAmount) || 0) : 0,
     })
   }
 
@@ -68,7 +56,7 @@ export default function CategoryFormModal({
               setName(e.target.value)
               setError('')
             }}
-            placeholder="e.g. Groceries, Travel"
+            placeholder="e.g. Groceries, Gym, Veterinarian"
             autoFocus
             className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
@@ -94,18 +82,6 @@ export default function CategoryFormModal({
           </select>
           {error && <p className="text-sm text-rose-500 mt-1">{error}</p>}
         </div>
-
-        <CurrencyInput
-          label={isIncome ? 'Monthly Expected' : 'Monthly Budget'}
-          value={plannedAmount}
-          onChange={(val) => setPlannedAmount(String(val))}
-          helperText={
-            isIncome
-              ? 'Estimated monthly income (e.g. 66,000 for bi-weekly paychecks of 33k).'
-              : 'Maximum planned spending limit for this category for the month.'
-          }
-          size="compact"
-        />
 
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">

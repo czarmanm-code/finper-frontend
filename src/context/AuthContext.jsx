@@ -3,15 +3,6 @@ import { apiRequest } from '../services/api'
 
 const AuthContext = createContext(null)
 
-// Default local admin identity so offline work & local financial data are NEVER wiped or stranded
-const DEFAULT_LOCAL_ADMIN = {
-  id: '6acbee9eb19661efbca3488b',
-  name: 'Admin',
-  email: 'admin@perfin.app',
-  role: 'admin',
-  isActive: true,
-}
-
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('finper_auth_token'))
   const [user, setUser] = useState(() => {
@@ -64,30 +55,17 @@ export function AuthProvider({ children }) {
   }, [checkAuth])
 
   const login = useCallback(async (email, password) => {
-    try {
-      const data = await apiRequest('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      })
+    const data = await apiRequest('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    })
 
-      localStorage.setItem('finper_auth_token', data.token)
-      localStorage.setItem('finper_current_user', JSON.stringify(data.user))
-      setToken(data.token)
-      setUser(data.user)
-      setNeedsSetup(false)
-      return data.user
-    } catch (err) {
-      // If backend is offline but admin credentials are used, allow local admin entry
-      if (
-        email.toLowerCase() === 'admin@perfin.app' &&
-        password === 'adminpassword123'
-      ) {
-        setUser(DEFAULT_LOCAL_ADMIN)
-        localStorage.setItem('finper_current_user', JSON.stringify(DEFAULT_LOCAL_ADMIN))
-        return DEFAULT_LOCAL_ADMIN
-      }
-      throw err
-    }
+    localStorage.setItem('finper_auth_token', data.token)
+    localStorage.setItem('finper_current_user', JSON.stringify(data.user))
+    setToken(data.token)
+    setUser(data.user)
+    setNeedsSetup(false)
+    return data.user
   }, [])
 
   const register = useCallback(async ({ name, email, password, invitationToken }) => {

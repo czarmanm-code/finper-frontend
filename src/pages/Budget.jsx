@@ -19,7 +19,6 @@ import {
 } from '@heroicons/react/24/outline'
 import { getCategories, updateCategoryPlannedAmount } from '../services/categoriesService'
 import { getTransactions } from '../services/transactionsService'
-import { getAll as getLocalStorageSections } from '../services/sectionsRepository'
 import { HEROICON_MAP } from '../utils/heroicons'
 
 export default function Budget() {
@@ -125,37 +124,10 @@ export default function Budget() {
     })
   }, [budgetRows, activeTab, searchQuery])
 
-  // Identify savings and investment categories
-  const savingsCategoryIds = useMemo(() => {
-    const ids = new Set()
-    try {
-      const sections = getLocalStorageSections()
-      sections.forEach((sec) => {
-        const secName = sec.name?.toLowerCase() || ''
-        if (
-          secName.includes('saving') ||
-          secName.includes('ahorro') ||
-          secName.includes('invest') ||
-          secName.includes('inversión') ||
-          secName.includes('inversion')
-        ) {
-          sec.categories?.forEach((c) => {
-            ids.add(c.id)
-            if (c.serverId) ids.add(c.serverId)
-          })
-        }
-      })
-    } catch {
-      // fallback
-    }
-    return ids
-  }, [])
-
   // Helper to determine if a budget row is savings/investment
   const isSavingsRow = useCallback(
     (row) => {
-      if (savingsCategoryIds.has(row.id)) return true
-      const lower = row.name.toLowerCase()
+      const lower = (row.name || '').toLowerCase()
       return (
         lower.includes('saving') ||
         lower.includes('ahorro') ||
@@ -165,7 +137,7 @@ export default function Budget() {
         lower.includes('fondo de emergencia')
       )
     },
-    [savingsCategoryIds]
+    []
   )
 
   // 1. Total Planned & Actual Income

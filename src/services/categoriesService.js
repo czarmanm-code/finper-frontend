@@ -33,6 +33,7 @@ export async function getCategories(typeFilter = null) {
         type: c.type,
         icon: c.icon || 'TagIcon',
         color: c.color || '#3b82f6',
+        sectionId: c.sectionId,
         plannedAmount: Number(c.plannedAmount) || 0,
       }))
     }
@@ -65,6 +66,16 @@ export async function createCategory(data) {
 }
 
 /**
+ * Updates a category directly in MongoDB.
+ */
+export async function updateCategory(id, data) {
+  return apiRequest(`/categories/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+/**
  * Deletes a category directly in MongoDB.
  */
 export async function deleteCategory(id) {
@@ -73,3 +84,64 @@ export async function deleteCategory(id) {
   })
 }
 
+/**
+ * Reorders categories in MongoDB.
+ */
+export async function reorderCategories(orderedIds) {
+  return apiRequest('/categories/reorder', {
+    method: 'PATCH',
+    body: JSON.stringify({ orderedIds }),
+  })
+}
+
+/**
+ * Fetches sections with their categories directly from MongoDB.
+ */
+export async function getSections() {
+  try {
+    const sections = await apiRequest('/sections')
+    return Array.isArray(sections) ? sections : []
+  } catch (err) {
+    console.error('[CategoriesService] Error fetching sections:', err)
+    return []
+  }
+}
+
+/**
+ * Creates a section in MongoDB.
+ */
+export async function createSection(data) {
+  return apiRequest('/sections', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+/**
+ * Updates a section in MongoDB.
+ */
+export async function updateSection(id, data) {
+  return apiRequest(`/sections/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+/**
+ * Deletes a section in MongoDB.
+ */
+export async function deleteSection(id) {
+  return apiRequest(`/sections/${id}`, {
+    method: 'DELETE',
+  })
+}
+
+/**
+ * Reorders sections in MongoDB.
+ */
+export async function reorderSections(orderedIds) {
+  return apiRequest('/sections/reorder', {
+    method: 'PATCH',
+    body: JSON.stringify({ orderedIds }),
+  })
+}

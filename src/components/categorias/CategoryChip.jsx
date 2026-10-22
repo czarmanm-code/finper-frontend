@@ -47,12 +47,6 @@ export default function CategoryChip({ category, onEdit, onDelete, dragOverlay =
         {category.name}
       </span>
 
-      {Number(category.plannedAmount) > 0 && (
-        <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-slate-200/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300">
-          ${Number(category.plannedAmount).toLocaleString('en-US')}
-        </span>
-      )}
-
       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={() => onEdit(category)}
