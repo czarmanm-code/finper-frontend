@@ -1,8 +1,7 @@
-import { Bars3Icon, WalletIcon } from '@heroicons/react/24/outline'
-import ThemeToggle from './ThemeToggle'
+import { Bars3Icon, WalletIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { SyncStatusBar } from './SyncStatusBar'
 
-export default function Header({ onMenuClick }) {
+export default function Header({ onMenuClick, onAddTransaction }) {
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur px-4 py-3">
       <div className="flex items-center gap-3">
@@ -22,9 +21,23 @@ export default function Header({ onMenuClick }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         <SyncStatusBar />
-        <ThemeToggle />
+
+        {onAddTransaction && (
+          <button
+            type="button"
+            onClick={onAddTransaction}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 active:scale-95 rounded-lg shadow-sm transition cursor-pointer"
+            title="Add a new transaction (Shortcut: Press T)"
+          >
+            <PlusIcon className="w-4 h-4" />
+            <span>Add Transaction</span>
+            <kbd className="hidden md:inline-flex items-center justify-center text-[10px] font-semibold font-mono px-1.5 py-0.5 rounded bg-sky-700/70 text-sky-100 border border-sky-400/30 ml-1">
+              T
+            </kbd>
+          </button>
+        )}
       </div>
     </header>
   )

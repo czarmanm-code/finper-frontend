@@ -32,7 +32,7 @@ export default function SectionCard({
     opacity: isDragging ? 0.5 : 1,
   }
 
-  const categoryIds = section.categories.map((c) => c.id)
+  const categoryIds = (section.categories || []).map((c) => c.id || c._id)
 
   return (
     <div
@@ -83,16 +83,16 @@ export default function SectionCard({
 
       <SortableContext items={categoryIds} strategy={verticalListSortingStrategy}>
         <div ref={setDroppableRef} className="flex flex-col gap-2 min-h-[3rem]">
-          {section.categories.map((category) => (
+          {(section.categories || []).map((category) => (
             <CategoryChip
-              key={category.id}
+              key={category.id || category._id}
               category={category}
               onEdit={onEditCategory}
               onDelete={onDeleteCategory}
             />
           ))}
 
-          {section.categories.length === 0 && (
+          {(!section.categories || section.categories.length === 0) && (
             <div className="flex items-center justify-center text-sm text-slate-400 dark:text-slate-600 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg py-4">
               No categories yet in this section
             </div>

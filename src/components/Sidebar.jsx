@@ -33,8 +33,8 @@ export default function Sidebar({ open, onClose }) {
           ${open ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        {/* Top: Brand Header */}
-        <div className="flex items-start justify-between mb-8">
+        {/* Top: Brand Header & Theme Toggle */}
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800/80 flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-2xs">
               <WalletIcon className="w-6 h-6" />
@@ -49,13 +49,17 @@ export default function Sidebar({ open, onClose }) {
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 lg:hidden"
-            aria-label="Close menu"
-          >
-            <XMarkIcon className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 lg:hidden cursor-pointer"
+              aria-label="Close menu"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Center: Navigation Menu */}
@@ -72,12 +76,12 @@ export default function Sidebar({ open, onClose }) {
           <MenuItem label="History" icon={ClockIcon} disabled />
         </nav>
 
-        {/* Bottom: User Card, Logout & Theme */}
-        <div className="pt-4 mt-auto border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3 shrink-0">
+        {/* Bottom: User Profile & Logout */}
+        <div className="pt-4 mt-auto border-t border-slate-200 dark:border-slate-800 shrink-0">
           {user && (
-            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800">
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-7 h-7 rounded-full bg-sky-100 dark:bg-sky-950 flex items-center justify-center text-sky-700 dark:text-sky-300 font-bold uppercase text-[11px] flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-sky-100 dark:bg-sky-950 flex items-center justify-center text-sky-700 dark:text-sky-300 font-bold uppercase text-xs flex-shrink-0">
                   {user.name ? user.name.charAt(0) : 'U'}
                 </div>
                 <div className="min-w-0">
@@ -93,18 +97,13 @@ export default function Sidebar({ open, onClose }) {
               <button
                 type="button"
                 onClick={logout}
-                className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg transition"
+                className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition cursor-pointer"
                 title="Sign out"
               >
                 <ArrowRightOnRectangleIcon className="w-4 h-4" />
               </button>
             </div>
           )}
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Theme</span>
-            <ThemeToggle />
-          </div>
         </div>
       </aside>
     </>

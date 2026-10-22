@@ -8,7 +8,7 @@ import { QuickTransactionModal } from '../components/QuickTransactionModal'
 import { DashboardEmptyState } from '../components/DashboardEmptyState'
 import SetTargetModal from '../components/SetTargetModal'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
-import { PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, ArrowPathIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { getCategories } from '../services/categoriesService'
 import { getTransactions, resetMonthData } from '../services/transactionsService'
 import { HEROICON_MAP } from '../utils/heroicons'
@@ -148,12 +148,30 @@ export default function Dashboard() {
 
   const currentMonthName = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date())
 
+  // Quick keyboard shortcut: 'T' to add transaction
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+        return
+      }
+      if (e.key === 't' || e.key === 'T') {
+        e.preventDefault()
+        setIsModalOpen(true)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <Header
+          onMenuClick={() => setSidebarOpen(true)}
+          onAddTransaction={() => setIsModalOpen(true)}
+        />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col gap-6 lg:gap-8">
           {/* Dashboard Header Bar */}
@@ -178,21 +196,13 @@ export default function Dashboard() {
               {isAdmin && movements.length > 0 && (
                 <button
                   onClick={() => setIsResetConfirmOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xs transition cursor-pointer"
-                  title="Reset test data for this month (admin test tool)"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xs transition cursor-pointer"
+                  title="Admin Tool: Clear all test transactions for this month"
                 >
-                  <ArrowPathIcon className="w-3.5 h-3.5" />
-                  <span>Reset Month</span>
+                  <TrashIcon className="w-3.5 h-3.5 text-rose-500" />
+                  <span>Clear Month Data</span>
                 </button>
               )}
-
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm transition cursor-pointer"
-              >
-                <PlusIcon className="w-4 h-4" />
-                <span>Add Transaction</span>
-              </button>
             </div>
           </div>
 
@@ -225,6 +235,17 @@ export default function Dashboard() {
           )}
         </main>
 
+        {/* Floating Action Button for mobile thumb accessibility */}
+        <button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          className="fixed bottom-6 right-6 z-30 sm:hidden w-12 h-12 rounded-full text-white bg-sky-600 hover:bg-sky-700 active:scale-95 shadow-lg flex items-center justify-center cursor-pointer transition-transform"
+          aria-label="Add Transaction"
+          title="Add Transaction"
+        >
+          <PlusIcon className="w-6 h-6" />
+        </button>
+
         {(isModalOpen || editingTransaction) && (
           <QuickTransactionModal
             isOpen={isModalOpen || Boolean(editingTransaction)}
@@ -247,10 +268,11 @@ export default function Dashboard() {
 
         {isResetConfirmOpen && (
           <ConfirmDialog
-            title="Reset Month Data"
-            message="Are you sure you want to reset all transactions for this testing session? This will clear all recorded movements and return the dashboard to a clean slate."
-            confirmLabel="Reset Everything"
+            title={`Clear All Transactions for ${monthLabel}`}
+            message={`This action will permanently delete all recorded income and expense transactions for ${monthLabel}. Your categories, targets, and sections will remain intact, but all movements in this month will be permanently wiped.`}
+            confirmLabel="Delete Month Transactions"
             danger
+            typeToConfirm="RESET"
             onConfirm={handleResetData}
             onCancel={() => setIsResetConfirmOpen(false)}
           />

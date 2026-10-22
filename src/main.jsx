@@ -14,6 +14,15 @@ if (typeof localStorage !== 'undefined') {
   localStorage.removeItem('finper-offline-sync-queue')
 }
 
+// In development, ensure lingering service workers don't intercept unbundled modules
+if (import.meta.env.DEV && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      registration.unregister()
+    }
+  })
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />

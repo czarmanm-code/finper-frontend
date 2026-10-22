@@ -12,7 +12,6 @@ import {
   PlusIcon,
   PencilSquareIcon,
   TrashIcon,
-  ArrowPathIcon,
   MagnifyingGlassIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
@@ -31,6 +30,7 @@ export default function Budget() {
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all') // 'all' | 'income' | 'expense'
   const [searchQuery, setSearchQuery] = useState('')
+  const [sortBy, setSortBy] = useState('custom') // 'custom' | 'budget-desc' | 'spent-desc' | 'alerts' | 'name'
   const [editingCategory, setEditingCategory] = useState(null)
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false)
   const [clearTargetConfirm, setClearTargetConfirm] = useState(null)
@@ -116,9 +116,9 @@ export default function Budget() {
     })
   }, [categories, actualPerCategory])
 
-  // Filtered rows
+  // Filtered & Sorted rows
   const filteredRows = useMemo(() => {
-    return budgetRows.filter((row) => {
+    const list = budgetRows.filter((row) => {
       if (activeTab === 'income' && row.type !== 'income') return false
       if (activeTab === 'expense' && row.type !== 'expense') return false
       if (searchQuery.trim()) {
@@ -127,7 +127,27 @@ export default function Budget() {
       }
       return true
     })
-  }, [budgetRows, activeTab, searchQuery])
+
+    if (sortBy === 'budget-desc') {
+      return [...list].sort((a, b) => b.planned - a.planned)
+    }
+    if (sortBy === 'spent-desc') {
+      return [...list].sort((a, b) => b.actual - a.actual)
+    }
+    if (sortBy === 'alerts') {
+      return [...list].sort((a, b) => {
+        if (a.isOverBudget && !b.isOverBudget) return -1
+        if (!a.isOverBudget && b.isOverBudget) return 1
+        return b.percent - a.percent
+      })
+    }
+    if (sortBy === 'name') {
+      return [...list].sort((a, b) => a.name.localeCompare(b.name))
+    }
+
+    // Default 'custom': preserves the inherited section & category drag order
+    return list
+  }, [budgetRows, activeTab, searchQuery, sortBy])
 
   // Helper to determine if a budget row is savings/investment
   const isSavingsRow = useCallback(
@@ -181,8 +201,12 @@ export default function Budget() {
   }, [budgetRows, isSavingsRow])
 
   // 4. Net Unallocated Surplus (Income minus Expenses minus Dedicated Savings)
-  const plannedUnallocated = totalPlannedIncome - totalPlannedExpenses - totalPlannedSavings
+  const totalPlannedBudgeted = totalPlannedExpenses + totalPlannedSavings
+  const plannedUnallocated = totalPlannedIncome - totalPlannedBudgeted
   const actualNetBalance = totalActualIncome - totalActualExpenses - totalActualSavings
+  const isBalanced = plannedUnallocated === 0
+  const isDeficit = plannedUnallocated < 0
+  const isSurplus = plannedUnallocated > 0
 
   const currentMonthName = new Intl.DateTimeFormat('en-US', {
     month: 'long',
@@ -197,12 +221,30 @@ export default function Budget() {
     await loadBudgetData()
   }
 
+  // Quick keyboard shortcut: 'T' to add transaction
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+        return
+      }
+      if (e.key === 't' || e.key === 'T') {
+        e.preventDefault()
+        setIsTransactionModalOpen(true)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <Header
+          onMenuClick={() => setSidebarOpen(true)}
+          onAddTransaction={() => setIsTransactionModalOpen(true)}
+        />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col gap-6 lg:gap-8">
           {/* Header Bar */}
@@ -223,23 +265,6 @@ export default function Budget() {
 
             <div className="flex flex-wrap items-center gap-2.5">
               <MonthSelector />
-
-              <button
-                onClick={loadBudgetData}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xs transition cursor-pointer"
-                title="Refresh budget numbers"
-              >
-                <ArrowPathIcon className="w-3.5 h-3.5" />
-                <span>Refresh</span>
-              </button>
-
-              <button
-                onClick={() => setIsTransactionModalOpen(true)}
-                className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm transition cursor-pointer"
-              >
-                <PlusIcon className="w-4 h-4" />
-                <span>Add Movement</span>
-              </button>
             </div>
           </div>
 
@@ -338,35 +363,93 @@ export default function Budget() {
               </div>
             </div>
 
-            {/* Projected Net Margin / Remaining Balance Card */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+            {/* Budget Balance / Allocation Card */}
+            <div
+              className={`border rounded-2xl p-5 shadow-sm flex flex-col justify-between transition-colors ${
+                isDeficit
+                  ? 'border-rose-300 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/20'
+                  : isSurplus
+                  ? 'border-emerald-300 dark:border-emerald-900/60 bg-emerald-50/30 dark:bg-emerald-950/20'
+                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+              }`}
+            >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Projected Margin
-                </span>
-                <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
-                  <ScaleIcon className="w-5 h-5" />
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Budget Balance
+                  </span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      isDeficit
+                        ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-400'
+                        : isSurplus
+                        ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400'
+                        : 'bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-400'
+                    }`}
+                  >
+                    {isDeficit ? 'Deficit' : isSurplus ? 'Surplus' : 'Balanced'}
+                  </span>
                 </div>
-              </div>
-              <div className="mt-2">
+
                 <div
-                  className={`text-2xl font-bold ${
-                    plannedUnallocated >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-600 dark:text-rose-400'
+                  className={`p-2 rounded-lg ${
+                    isDeficit
+                      ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400'
+                      : isSurplus
+                      ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400'
+                      : 'bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400'
                   }`}
                 >
-                  ${plannedUnallocated.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {isDeficit ? (
+                    <ExclamationTriangleIcon className="w-5 h-5" />
+                  ) : isSurplus ? (
+                    <ScaleIcon className="w-5 h-5" />
+                  ) : (
+                    <CheckCircleIcon className="w-5 h-5" />
+                  )}
                 </div>
+              </div>
+
+              <div className="mt-2">
+                <div
+                  className={`text-2xl font-bold tracking-tight ${
+                    isDeficit
+                      ? 'text-rose-600 dark:text-rose-400'
+                      : isSurplus
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-indigo-600 dark:text-indigo-400'
+                  }`}
+                >
+                  {isDeficit ? '-' : isSurplus ? '+' : ''}$
+                  {Math.abs(plannedUnallocated).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
+
                 <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
-                  <span>Live Net Balance:</span>
-                  <span className={`font-semibold ${actualNetBalance >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                    ${actualNetBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <span>Planned: Income vs Budget:</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                    ${totalPlannedIncome.toLocaleString('en-US', { maximumFractionDigits: 0 })} vs $
+                    {totalPlannedBudgeted.toLocaleString('en-US', { maximumFractionDigits: 0 })}
                   </span>
                 </div>
               </div>
-              <div className="text-[11px] font-medium text-slate-400 mt-3">
-                {totalPlannedIncome > 0
-                  ? `${Math.round((totalPlannedSavings / totalPlannedIncome) * 100)}% savings rate planned`
-                  : 'Income minus expenses & savings'}
+
+              <div className="text-[11px] font-medium mt-3">
+                {isDeficit ? (
+                  <span className="text-rose-600 dark:text-rose-400">
+                    Over-budgeted by ${Math.abs(plannedUnallocated).toLocaleString('en-US', { maximumFractionDigits: 0 })} · Adjust targets
+                  </span>
+                ) : isSurplus ? (
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    ${plannedUnallocated.toLocaleString('en-US', { maximumFractionDigits: 0 })} available to allocate to savings or expenses
+                  </span>
+                ) : (
+                  <span className="text-indigo-600 dark:text-indigo-400">
+                    Zero-based balanced · All income is budgeted
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -406,15 +489,33 @@ export default function Budget() {
               </button>
             </div>
 
-            <div className="relative w-full sm:w-64">
-              <MagnifyingGlassIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search category..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
-              />
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                <span className="hidden md:inline font-medium">Sort:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-full sm:w-auto px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                  title="Sort budget categories"
+                >
+                  <option value="custom">Categories Order (Default)</option>
+                  <option value="alerts">Over Budget First</option>
+                  <option value="budget-desc">Highest Budget Limit</option>
+                  <option value="spent-desc">Most Spent</option>
+                  <option value="name">Name (A-Z)</option>
+                </select>
+              </div>
+
+              <div className="relative w-full sm:w-56">
+                <MagnifyingGlassIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search category..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
             </div>
           </div>
 
@@ -614,6 +715,17 @@ export default function Budget() {
             )}
           </div>
         </main>
+
+        {/* Floating Action Button for mobile thumb accessibility */}
+        <button
+          type="button"
+          onClick={() => setIsTransactionModalOpen(true)}
+          className="fixed bottom-6 right-6 z-30 sm:hidden w-12 h-12 rounded-full text-white bg-sky-600 hover:bg-sky-700 active:scale-95 shadow-lg flex items-center justify-center cursor-pointer transition-transform"
+          aria-label="Add Movement"
+          title="Add Movement"
+        >
+          <PlusIcon className="w-6 h-6" />
+        </button>
 
         {/* Edit Target / Budget Modal */}
         {editingCategory && (

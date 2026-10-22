@@ -164,7 +164,7 @@ export default function Categorias() {
         <ConfirmDialog
           title="Delete Section"
           message={
-            deleteSectionTarget.categories.length > 0
+            (deleteSectionTarget.categories?.length || 0) > 0
               ? `This will also delete ${deleteSectionTarget.categories.length} categor${
                   deleteSectionTarget.categories.length === 1 ? 'y' : 'ies'
                 } inside "${deleteSectionTarget.name}". This action cannot be undone.`
