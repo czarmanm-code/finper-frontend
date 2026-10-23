@@ -3,6 +3,7 @@ import Dashboard from './pages/Dashboard'
 import Categorias from './pages/Categorias'
 import Budget from './pages/Budget'
 import Loans from './pages/Loans'
+import Investments from './pages/Investments'
 import Users from './pages/Users'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
@@ -78,6 +79,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Loans />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/investments"
+              element={
+                <ProtectedRoute>
+                  <Investments />
                 </ProtectedRoute>
               }
             />

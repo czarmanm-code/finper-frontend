@@ -4,6 +4,7 @@ import {
   CreditCardIcon,
   WalletIcon,
   TagIcon,
+  ArrowTrendingUpIcon,
   UserGroupIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
@@ -67,8 +68,9 @@ export default function Sidebar({ open, onClose }) {
         <nav className="flex flex-col gap-1 flex-1 overflow-y-auto">
           <MenuItem to="/" label="Dashboard" icon={HomeIcon} onNavigate={onClose} />
           <MenuItem to="/budget" label="Budget" icon={WalletIcon} onNavigate={onClose} />
-          <MenuItem to="/categorias" label="Categories" icon={TagIcon} onNavigate={onClose} />
+          <MenuItem to="/investments" label="Investments" icon={ArrowTrendingUpIcon} onNavigate={onClose} />
           <MenuItem to="/loans" label="Loans" icon={CreditCardIcon} onNavigate={onClose} />
+          <MenuItem to="/categorias" label="Categories" icon={TagIcon} onNavigate={onClose} />
         </nav>
 
         {/* Bottom: Settings, Admin & User Profile */}
