@@ -68,17 +68,16 @@ export default function Sidebar({ open, onClose }) {
           <MenuItem to="/" label="Dashboard" icon={HomeIcon} onNavigate={onClose} />
           <MenuItem to="/budget" label="Budget" icon={WalletIcon} onNavigate={onClose} />
           <MenuItem to="/categorias" label="Categories" icon={TagIcon} onNavigate={onClose} />
-          
+          <MenuItem to="/loans" label="Loans" icon={CreditCardIcon} onNavigate={onClose} />
+        </nav>
+
+        {/* Bottom: Settings, Admin & User Profile */}
+        <div className="pt-3 mt-auto border-t border-slate-200 dark:border-slate-800 shrink-0 space-y-2">
           {/* Admin-only Users Management */}
           {isAdmin && (
             <MenuItem to="/users" label="Users" icon={UserGroupIcon} onNavigate={onClose} />
           )}
 
-          <MenuItem to="/loans" label="Loans" icon={CreditCardIcon} onNavigate={onClose} />
-        </nav>
-
-        {/* Bottom: Settings & User Profile */}
-        <div className="pt-3 mt-auto border-t border-slate-200 dark:border-slate-800 shrink-0 space-y-2">
           <MenuItem to="/settings" label="Settings" icon={Cog6ToothIcon} onNavigate={onClose} />
 
           {user && (
