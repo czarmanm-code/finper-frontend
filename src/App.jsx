@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Categorias from './pages/Categorias'
 import Budget from './pages/Budget'
+import Loans from './pages/Loans'
 import Users from './pages/Users'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
@@ -69,6 +70,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Budget />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/loans"
+              element={
+                <ProtectedRoute>
+                  <Loans />
                 </ProtectedRoute>
               }
             />

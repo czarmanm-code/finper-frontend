@@ -1,7 +1,7 @@
 import { NavLink, Link } from 'react-router-dom'
 import {
   HomeIcon,
-  ClockIcon,
+  CreditCardIcon,
   WalletIcon,
   TagIcon,
   UserGroupIcon,
@@ -74,7 +74,7 @@ export default function Sidebar({ open, onClose }) {
             <MenuItem to="/users" label="Users" icon={UserGroupIcon} onNavigate={onClose} />
           )}
 
-          <MenuItem label="History" icon={ClockIcon} disabled />
+          <MenuItem to="/loans" label="Loans" icon={CreditCardIcon} onNavigate={onClose} />
         </nav>
 
         {/* Bottom: Settings & User Profile */}
