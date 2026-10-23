@@ -277,8 +277,150 @@ export default function Budget() {
             </div>
           </div>
 
-          {/* KPI Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Hero Banner: Budget Balance & Allocation */}
+          <div
+            className={`w-full rounded-3xl p-5 sm:p-7 border shadow-sm transition-all duration-300 ${
+              isDeficit
+                ? 'bg-rose-50/60 dark:bg-rose-950/25 border-rose-300 dark:border-rose-900/60'
+                : isSurplus
+                ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-900/60'
+                : 'bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/60'
+            }`}
+          >
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              {/* Left Column: Big Highlighted Balance & Guidance */}
+              <div className="space-y-2.5 min-w-0 flex-1">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Budget Allocation Balance
+                  </span>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-bold flex items-center gap-1.5 ${
+                      isDeficit
+                        ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400 border border-rose-300/80 dark:border-rose-800'
+                        : isSurplus
+                        ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300/80 dark:border-emerald-800'
+                        : 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-400 border border-indigo-300/80 dark:border-indigo-800'
+                    }`}
+                  >
+                    {isDeficit ? (
+                      <ExclamationTriangleIcon className="w-3.5 h-3.5" />
+                    ) : isSurplus ? (
+                      <ScaleIcon className="w-3.5 h-3.5" />
+                    ) : (
+                      <CheckCircleIcon className="w-3.5 h-3.5" />
+                    )}
+                    <span>
+                      {isDeficit ? 'Over-Budgeted (Deficit)' : isSurplus ? 'Available to Budget (Surplus)' : 'Zero-Based Balanced'}
+                    </span>
+                  </span>
+                </div>
+
+                <div className="flex items-baseline gap-3">
+                  <div
+                    className={`text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight ${
+                      isDeficit
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : isSurplus
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-indigo-600 dark:text-indigo-400'
+                    }`}
+                  >
+                    {isDeficit ? '-' : isSurplus ? '+' : ''}$
+                    {Math.abs(plannedUnallocated).toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    {isDeficit ? 'exceeds expected income' : isSurplus ? 'unallocated funds' : 'exact zero-based match'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Right Column: Equation Breakdown Pill Box */}
+              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xs p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xs flex flex-col gap-3 shrink-0 lg:w-80">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                  <span>Planning Equation</span>
+                  <span>{totalPlannedIncome > 0 ? `${Math.round((totalPlannedBudgeted / totalPlannedIncome) * 100)}% allocated` : '0%'}</span>
+                </div>
+
+                {/* Equation Badges */}
+                <div className="flex items-center justify-between text-xs sm:text-sm gap-2">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400">Income</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                      ${totalPlannedIncome.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                    </span>
+                  </div>
+
+                  <span className="text-slate-400 font-bold text-base">−</span>
+
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-400">Budgeted</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">
+                      ${totalPlannedBudgeted.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                    </span>
+                  </div>
+
+                  <span className="text-slate-400 font-bold text-base">=</span>
+
+                  <div className="flex flex-col text-right">
+                    <span className="text-[10px] text-slate-400">Balance</span>
+                    <span
+                      className={`font-bold ${
+                        isDeficit
+                          ? 'text-rose-600 dark:text-rose-400'
+                          : isSurplus
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-indigo-600 dark:text-indigo-400'
+                      }`}
+                    >
+                      {isDeficit ? '-' : isSurplus ? '+' : ''}$
+                      {Math.abs(plannedUnallocated).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Allocation Progress Bar */}
+                <div className="space-y-1 pt-1">
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden flex">
+                    {/* Living Expenses Share */}
+                    <div
+                      className="bg-rose-500 h-2 transition-all duration-700"
+                      style={{
+                        width: totalPlannedIncome > 0
+                          ? `${Math.min((totalPlannedExpenses / totalPlannedIncome) * 100, 100)}%`
+                          : '0%',
+                      }}
+                      title={`Expenses: $${totalPlannedExpenses.toLocaleString('en-US')}`}
+                    />
+                    {/* Savings Share */}
+                    <div
+                      className="bg-sky-500 h-2 transition-all duration-700"
+                      style={{
+                        width: totalPlannedIncome > 0
+                          ? `${Math.min((totalPlannedSavings / totalPlannedIncome) * 100, Math.max(0, 100 - (totalPlannedExpenses / totalPlannedIncome) * 100))}%`
+                          : '0%',
+                      }}
+                      title={`Savings: $${totalPlannedSavings.toLocaleString('en-US')}`}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-slate-400">
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Expenses ({totalPlannedIncome > 0 ? Math.round((totalPlannedExpenses / totalPlannedIncome) * 100) : 0}%)
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-sky-500 inline-block" /> Savings ({totalPlannedIncome > 0 ? Math.round((totalPlannedSavings / totalPlannedIncome) * 100) : 0}%)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Secondary 3 Pillar Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Planned Income Card */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
               <div className="flex items-center justify-between">
@@ -369,96 +511,6 @@ export default function Budget() {
                     width: totalPlannedSavings > 0 ? `${Math.min((totalActualSavings / totalPlannedSavings) * 100, 100)}%` : '0%',
                   }}
                 />
-              </div>
-            </div>
-
-            {/* Budget Balance / Allocation Card */}
-            <div
-              className={`border rounded-2xl p-5 shadow-sm flex flex-col justify-between transition-colors ${
-                isDeficit
-                  ? 'border-rose-300 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/20'
-                  : isSurplus
-                  ? 'border-emerald-300 dark:border-emerald-900/60 bg-emerald-50/30 dark:bg-emerald-950/20'
-                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    Budget Balance
-                  </span>
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                      isDeficit
-                        ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-400'
-                        : isSurplus
-                        ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400'
-                        : 'bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-400'
-                    }`}
-                  >
-                    {isDeficit ? 'Deficit' : isSurplus ? 'Surplus' : 'Balanced'}
-                  </span>
-                </div>
-
-                <div
-                  className={`p-2 rounded-lg ${
-                    isDeficit
-                      ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400'
-                      : isSurplus
-                      ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-indigo-100 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400'
-                  }`}
-                >
-                  {isDeficit ? (
-                    <ExclamationTriangleIcon className="w-5 h-5" />
-                  ) : isSurplus ? (
-                    <ScaleIcon className="w-5 h-5" />
-                  ) : (
-                    <CheckCircleIcon className="w-5 h-5" />
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-2">
-                <div
-                  className={`text-2xl font-bold tracking-tight ${
-                    isDeficit
-                      ? 'text-rose-600 dark:text-rose-400'
-                      : isSurplus
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : 'text-indigo-600 dark:text-indigo-400'
-                  }`}
-                >
-                  {isDeficit ? '-' : isSurplus ? '+' : ''}$
-                  {Math.abs(plannedUnallocated).toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </div>
-
-                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
-                  <span>Planned: Income vs Budget:</span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">
-                    ${totalPlannedIncome.toLocaleString('en-US', { maximumFractionDigits: 0 })} vs $
-                    {totalPlannedBudgeted.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-                  </span>
-                </div>
-              </div>
-
-              <div className="text-[11px] font-medium mt-3">
-                {isDeficit ? (
-                  <span className="text-rose-600 dark:text-rose-400">
-                    Over-budgeted by ${Math.abs(plannedUnallocated).toLocaleString('en-US', { maximumFractionDigits: 0 })} · Adjust targets
-                  </span>
-                ) : isSurplus ? (
-                  <span className="text-emerald-600 dark:text-emerald-400">
-                    ${plannedUnallocated.toLocaleString('en-US', { maximumFractionDigits: 0 })} available to allocate to savings or expenses
-                  </span>
-                ) : (
-                  <span className="text-indigo-600 dark:text-indigo-400">
-                    Zero-based balanced · All income is budgeted
-                  </span>
-                )}
               </div>
             </div>
           </div>
