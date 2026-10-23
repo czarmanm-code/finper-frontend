@@ -74,13 +74,13 @@ export default function Sidebar({ open, onClose }) {
             <MenuItem to="/users" label="Users" icon={UserGroupIcon} onNavigate={onClose} />
           )}
 
-          <MenuItem to="/settings" label="Settings" icon={Cog6ToothIcon} onNavigate={onClose} />
-
           <MenuItem label="History" icon={ClockIcon} disabled />
         </nav>
 
-        {/* Bottom: User Profile & Logout */}
-        <div className="pt-4 mt-auto border-t border-slate-200 dark:border-slate-800 shrink-0">
+        {/* Bottom: Settings & User Profile */}
+        <div className="pt-3 mt-auto border-t border-slate-200 dark:border-slate-800 shrink-0 space-y-2">
+          <MenuItem to="/settings" label="Settings" icon={Cog6ToothIcon} onNavigate={onClose} />
+
           {user && (
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800">
               <Link
@@ -102,25 +102,14 @@ export default function Sidebar({ open, onClose }) {
                 </div>
               </Link>
 
-              <div className="flex items-center gap-1 shrink-0">
-                <Link
-                  to="/settings"
-                  onClick={onClose}
-                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 rounded-lg transition cursor-pointer"
-                  title="Settings"
-                >
-                  <Cog6ToothIcon className="w-4 h-4" />
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={logout}
-                  className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition cursor-pointer"
-                  title="Sign out"
-                >
-                  <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={logout}
+                className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition cursor-pointer"
+                title="Sign out"
+              >
+                <ArrowRightOnRectangleIcon className="w-4 h-4" />
+              </button>
             </div>
           )}
         </div>
