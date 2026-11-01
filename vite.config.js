@@ -5,6 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 // https://vite.dev/config/
 export default defineConfig({
   server: {
+    port: 5174, // Fixed development port for PerFin
     host: true,
     allowedHosts: [
       'finper.ladeconfianza.com',
@@ -19,6 +20,7 @@ export default defineConfig({
     },
   },
   preview: {
+    port: 5174, // Fixed preview port for PerFin
     host: true,
     allowedHosts: [
       'finper.ladeconfianza.com',
@@ -73,7 +75,7 @@ export default defineConfig({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+                maxAgeSeconds: 60 * 60 * 24 * 365,
               },
               cacheableResponse: {
                 statuses: [0, 200],
@@ -88,7 +90,7 @@ export default defineConfig({
               networkTimeoutSeconds: 5,
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24, // 1 day
+                maxAgeSeconds: 60 * 60 * 24,
               },
               cacheableResponse: {
                 statuses: [0, 200],
