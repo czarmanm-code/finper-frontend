@@ -23,6 +23,12 @@ import MonthSelector from '../components/MonthSelector'
 import CategoryDetailSheet from '../components/CategoryDetailSheet'
 import { useDateFilter } from '../context/DateContext'
 
+function formatPercent(val) {
+  if (!val || val <= 0) return '0%'
+  if (val < 1) return `${val.toFixed(1)}%`
+  return `${Math.round(val)}%`
+}
+
 export default function Budget() {
   const { monthLabel, isTransactionInSelectedMonth } = useDateFilter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -369,7 +375,11 @@ export default function Budget() {
               <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xs p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xs flex flex-col gap-3 shrink-0 lg:w-80">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
                   <span>Planning Equation</span>
-                  <span>{totalPlannedIncome > 0 ? `${Math.round((totalPlannedBudgeted / totalPlannedIncome) * 100)}% allocated` : '0%'}</span>
+                  <span>
+                    {totalPlannedIncome > 0
+                      ? `${formatPercent((totalPlannedBudgeted / totalPlannedIncome) * 100)} allocated`
+                      : '0%'}
+                  </span>
                 </div>
 
                 {/* Equation Badges */}
@@ -416,9 +426,10 @@ export default function Budget() {
                     <div
                       className="bg-rose-500 h-2 transition-all duration-700"
                       style={{
-                        width: totalPlannedIncome > 0
-                          ? `${Math.min((totalPlannedExpenses / totalPlannedIncome) * 100, 100)}%`
-                          : '0%',
+                        width:
+                          totalPlannedIncome > 0 && totalPlannedExpenses > 0
+                            ? `${Math.max(Math.min((totalPlannedExpenses / totalPlannedIncome) * 100, 100), 1.5)}%`
+                            : '0%',
                       }}
                       title={`Expenses: $${totalPlannedExpenses.toLocaleString('en-US')}`}
                     />
@@ -426,19 +437,28 @@ export default function Budget() {
                     <div
                       className="bg-sky-500 h-2 transition-all duration-700"
                       style={{
-                        width: totalPlannedIncome > 0
-                          ? `${Math.min((totalPlannedSavings / totalPlannedIncome) * 100, Math.max(0, 100 - (totalPlannedExpenses / totalPlannedIncome) * 100))}%`
-                          : '0%',
+                        width:
+                          totalPlannedIncome > 0 && totalPlannedSavings > 0
+                            ? `${Math.max(Math.min((totalPlannedSavings / totalPlannedIncome) * 100, Math.max(0, 100 - (totalPlannedExpenses / totalPlannedIncome) * 100)), 1.5)}%`
+                            : '0%',
                       }}
                       title={`Savings: $${totalPlannedSavings.toLocaleString('en-US')}`}
                     />
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-slate-400">
                     <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Expenses ({totalPlannedIncome > 0 ? Math.round((totalPlannedExpenses / totalPlannedIncome) * 100) : 0}%)
+                      <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Expenses (
+                      {totalPlannedIncome > 0
+                        ? formatPercent((totalPlannedExpenses / totalPlannedIncome) * 100)
+                        : '0%'}
+                      )
                     </span>
                     <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-sky-500 inline-block" /> Savings ({totalPlannedIncome > 0 ? Math.round((totalPlannedSavings / totalPlannedIncome) * 100) : 0}%)
+                      <span className="w-2 h-2 rounded-full bg-sky-500 inline-block" /> Savings (
+                      {totalPlannedIncome > 0
+                        ? formatPercent((totalPlannedSavings / totalPlannedIncome) * 100)
+                        : '0%'}
+                      )
                     </span>
                   </div>
                 </div>
@@ -466,6 +486,7 @@ export default function Budget() {
                   <span>Actual Received:</span>
                   <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                     ${totalActualIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {totalPlannedIncome > 0 && ` (${formatPercent((totalActualIncome / totalPlannedIncome) * 100)})`}
                   </span>
                 </div>
               </div>
@@ -473,7 +494,10 @@ export default function Budget() {
                 <div
                   className="bg-emerald-500 h-1.5 rounded-full transition-all duration-700"
                   style={{
-                    width: totalPlannedIncome > 0 ? `${Math.min((totalActualIncome / totalPlannedIncome) * 100, 100)}%` : '0%',
+                    width:
+                      totalActualIncome > 0 && totalPlannedIncome > 0
+                        ? `${Math.max(Math.min((totalActualIncome / totalPlannedIncome) * 100, 100), 2)}%`
+                        : '0%',
                   }}
                 />
               </div>
@@ -497,6 +521,7 @@ export default function Budget() {
                   <span>Actual Spent:</span>
                   <span className="font-semibold text-rose-600 dark:text-rose-400">
                     ${totalActualExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {totalPlannedExpenses > 0 && ` (${formatPercent((totalActualExpenses / totalPlannedExpenses) * 100)})`}
                   </span>
                 </div>
               </div>
@@ -504,7 +529,10 @@ export default function Budget() {
                 <div
                   className="bg-rose-500 h-1.5 rounded-full transition-all duration-700"
                   style={{
-                    width: totalPlannedExpenses > 0 ? `${Math.min((totalActualExpenses / totalPlannedExpenses) * 100, 100)}%` : '0%',
+                    width:
+                      totalActualExpenses > 0 && totalPlannedExpenses > 0
+                        ? `${Math.max(Math.min((totalActualExpenses / totalPlannedExpenses) * 100, 100), 2)}%`
+                        : '0%',
                   }}
                 />
               </div>
@@ -528,6 +556,7 @@ export default function Budget() {
                   <span>Actual Saved:</span>
                   <span className="font-semibold text-sky-600 dark:text-sky-400">
                     ${totalActualSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {totalPlannedSavings > 0 && ` (${formatPercent((totalActualSavings / totalPlannedSavings) * 100)})`}
                   </span>
                 </div>
               </div>
@@ -535,7 +564,10 @@ export default function Budget() {
                 <div
                   className="bg-sky-500 h-1.5 rounded-full transition-all duration-700"
                   style={{
-                    width: totalPlannedSavings > 0 ? `${Math.min((totalActualSavings / totalPlannedSavings) * 100, 100)}%` : '0%',
+                    width:
+                      totalActualSavings > 0 && totalPlannedSavings > 0
+                        ? `${Math.max(Math.min((totalActualSavings / totalPlannedSavings) * 100, 100), 2)}%`
+                        : '0%',
                   }}
                 />
               </div>
@@ -758,13 +790,13 @@ export default function Budget() {
                                 <div
                                   className="h-2 rounded-full transition-all duration-700"
                                   style={{
-                                    width: `${row.percent}%`,
+                                    width: row.actual > 0 ? `${Math.max(row.percent, 1.5)}%` : '0%',
                                     backgroundColor: row.isOverBudget ? '#f43f5e' : row.color,
                                   }}
                                 />
                               </div>
-                              <span className="text-xs font-medium text-slate-500 w-9 text-right">
-                                {Math.round(row.percent)}%
+                              <span className="text-xs font-medium text-slate-500 w-11 text-right">
+                                {formatPercent(row.percent)}
                               </span>
                             </div>
                           </td>

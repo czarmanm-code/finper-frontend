@@ -12,10 +12,20 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
   const isPositive = available > 0
   const isNegative = available < 0
 
-  // Percentages relative to total inflows
-  const expensesPercent = income > 0 ? Math.round((expenses / income) * 100) : 0
-  const savingsPercent = income > 0 ? Math.round((savings / income) * 100) : 0
-  const availablePercent = income > 0 ? Math.max(0, Math.round((available / income) * 100)) : 0
+  // Precise percentages relative to total inflows
+  const rawExpensesPercent = income > 0 ? (expenses / income) * 100 : 0
+  const rawSavingsPercent = income > 0 ? (savings / income) * 100 : 0
+  const rawAvailablePercent = income > 0 ? Math.max(0, (available / income) * 100) : 0
+
+  function formatPercent(val) {
+    if (!val || val <= 0) return '0%'
+    if (val < 1) return `${val.toFixed(1)}%`
+    return `${Math.round(val)}%`
+  }
+
+  const expensesPercentText = formatPercent(rawExpensesPercent)
+  const savingsPercentText = formatPercent(rawSavingsPercent)
+  const availablePercentText = formatPercent(rawAvailablePercent)
 
   return (
     <section className="space-y-4">
@@ -92,7 +102,7 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
           <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xs p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xs flex flex-col gap-3 shrink-0 lg:w-96">
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
               <span>Cash Flow Breakdown</span>
-              <span>{income > 0 ? `${availablePercent}% retained` : '0%'}</span>
+              <span>{income > 0 ? `${availablePercentText} retained` : '0%'}</span>
             </div>
 
             {/* Equation Badges */}
@@ -148,7 +158,9 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
                 <div
                   className="bg-rose-500 h-2 transition-all duration-700"
                   style={{
-                    width: income > 0 ? `${Math.min((expenses / income) * 100, 100)}%` : '0%',
+                    width: expenses > 0 && income > 0
+                      ? `${Math.max((expenses / income) * 100, 1.5)}%`
+                      : '0%',
                   }}
                   title={`Expenses: $${expenses.toLocaleString('en-US')}`}
                 />
@@ -156,8 +168,8 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
                 <div
                   className="bg-sky-500 h-2 transition-all duration-700"
                   style={{
-                    width: income > 0
-                      ? `${Math.min((savings / income) * 100, Math.max(0, 100 - (expenses / income) * 100))}%`
+                    width: savings > 0 && income > 0
+                      ? `${Math.max((savings / income) * 100, 1.5)}%`
                       : '0%',
                   }}
                   title={`Savings: $${savings.toLocaleString('en-US')}`}
@@ -175,13 +187,13 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
               </div>
               <div className="flex items-center justify-between text-[10px] text-slate-400">
                 <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Expenses ({expensesPercent}%)
+                  <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Expenses ({expensesPercentText})
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-sky-500 inline-block" /> Savings ({savingsPercent}%)
+                  <span className="w-2 h-2 rounded-full bg-sky-500 inline-block" /> Savings ({savingsPercentText})
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> Available ({availablePercent}%)
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> Available ({availablePercentText})
                 </span>
               </div>
             </div>
@@ -232,13 +244,15 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
               ${expenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {income > 0 ? `${expensesPercent}% of total inflows` : 'Total spent'}
+              {income > 0 ? `${expensesPercentText} of total inflows` : 'Total spent'}
             </div>
           </div>
           <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mt-3 overflow-hidden">
             <div
               className="bg-rose-500 h-1.5 rounded-full transition-all duration-700"
-              style={{ width: `${Math.min(expensesPercent, 100)}%` }}
+              style={{
+                width: expenses > 0 ? `${Math.max(rawExpensesPercent, 2)}%` : '0%',
+              }}
             />
           </div>
         </div>
@@ -258,13 +272,15 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
               ${savings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {income > 0 ? `${savingsPercent}% of total inflows` : 'Target reserve'}
+              {income > 0 ? `${savingsPercentText} of total inflows` : 'Target reserve'}
             </div>
           </div>
           <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mt-3 overflow-hidden">
             <div
               className="bg-sky-500 h-1.5 rounded-full transition-all duration-700"
-              style={{ width: `${Math.min(savingsPercent, 100)}%` }}
+              style={{
+                width: savings > 0 ? `${Math.max(rawSavingsPercent, 2)}%` : '0%',
+              }}
             />
           </div>
         </div>

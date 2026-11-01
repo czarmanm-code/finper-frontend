@@ -9,7 +9,7 @@ import { DashboardEmptyState } from '../components/DashboardEmptyState'
 import SetTargetModal from '../components/SetTargetModal'
 import CategoryDetailSheet from '../components/CategoryDetailSheet'
 import { PlusIcon } from '@heroicons/react/24/outline'
-import { getCategories } from '../services/categoriesService'
+import { getCategories, getSections } from '../services/categoriesService'
 import { getTransactions, deleteTransaction } from '../services/transactionsService'
 import { HEROICON_MAP } from '../utils/heroicons'
 import { useDateFilter } from '../context/DateContext'
@@ -25,14 +25,16 @@ export default function Dashboard() {
   const [defaultCategoryForNewTx, setDefaultCategoryForNewTx] = useState(null)
   const [allMonthTransactions, setAllMonthTransactions] = useState([])
   const [categories, setCategories] = useState([])
+  const [sections, setSections] = useState([])
   const [movements, setMovements] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
   const loadDashboardData = useCallback(async () => {
     try {
-      const [fetchedCats, fetchedTxs] = await Promise.all([
+      const [fetchedCats, fetchedTxs, fetchedSections] = await Promise.all([
         getCategories(),
         getTransactions(),
+        getSections(),
       ])
 
       // Map categories for quick lookups
@@ -76,16 +78,79 @@ export default function Dashboard() {
           budget: plannedBudget,
           spent: recordedAmount,
           color: cat.color || '#3b82f6',
+          sectionId: cat.sectionId ? String(cat.sectionId) : null,
+          sectionName: cat.sectionName || '',
         }
       })
 
       const activeCategories = overviewCategories.filter((cat) => cat.spent > 0 || cat.budget > 0)
       const categoriesToShow = activeCategories.length > 0 ? activeCategories : overviewCategories
 
+      // Consolidate section rollups (Option A)
+      const sectionsWithMetrics = (fetchedSections || [])
+        .map((sec) => {
+          const secId = String(sec.id || sec._id)
+          const childCategories = overviewCategories.filter((cat) => {
+            return (
+              String(cat.sectionId) === secId ||
+              (cat.sectionName && cat.sectionName.toLowerCase() === sec.name.toLowerCase())
+            )
+          })
+
+          const totalBudget = childCategories.reduce((sum, c) => sum + c.budget, 0)
+          const totalSpent = childCategories.reduce((sum, c) => sum + c.spent, 0)
+          const isIncome =
+            sec.name.toLowerCase().includes('income') || sec.name.toLowerCase().includes('ingreso')
+          const isSavings =
+            sec.name.toLowerCase().includes('saving') ||
+            sec.name.toLowerCase().includes('ahorro') ||
+            sec.name.toLowerCase().includes('invest')
+
+          return {
+            id: secId,
+            name: sec.name,
+            icon: sec.icon || 'FolderIcon',
+            color: sec.color || '#64748b',
+            order: sec.order ?? 0,
+            isIncome,
+            isSavings,
+            totalBudget,
+            totalSpent,
+            categories: childCategories,
+          }
+        })
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+
+      // Check for unassigned categories
+      const assignedCatIds = new Set(
+        sectionsWithMetrics.flatMap((s) => s.categories.map((c) => c.id))
+      )
+      const unassigned = overviewCategories.filter((c) => !assignedCatIds.has(c.id))
+      if (unassigned.length > 0) {
+        sectionsWithMetrics.push({
+          id: 'unassigned',
+          name: 'Other Categories',
+          icon: 'Squares2X2Icon',
+          color: '#94a3b8',
+          order: 999,
+          isIncome: false,
+          isSavings: false,
+          totalBudget: unassigned.reduce((sum, c) => sum + c.budget, 0),
+          totalSpent: unassigned.reduce((sum, c) => sum + c.spent, 0),
+          categories: unassigned,
+        })
+      }
+
       // Map movements strictly for the selected month
       const mappedMovements = currentMonthTxs.slice(0, 15).map((tx) => {
         const cat = categoryMap.get(tx.categoryId)
-        const dateStr = tx.date ? new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Today'
+        const dateStr = tx.date
+          ? new Date(tx.date).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })
+          : 'Today'
         return {
           id: tx.serverId || tx.id,
           serverId: tx.serverId,
@@ -113,6 +178,7 @@ export default function Dashboard() {
         }
       })
 
+      setSections(sectionsWithMetrics)
       setCategories(categoriesToShow)
       setMovements(mappedMovements)
       setAllMonthTransactions(allMapped)
@@ -221,8 +287,9 @@ export default function Dashboard() {
                 savings={totalSavings}
               />
 
-              {categories.length > 0 && (
+              {(sections.length > 0 || categories.length > 0) && (
                 <CategoriesOverview
+                  sections={sections}
                   categories={categories}
                   onSetTarget={(cat) => setTargetModalCategory(cat)}
                   onSelectCategory={(cat) => setSelectedCategoryForDetail(cat)}
