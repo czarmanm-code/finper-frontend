@@ -52,6 +52,20 @@ export default function LoanDetailSheet({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, isClosing])
 
+  // Lock body scroll when sheet is open to prevent background touch-bleed
+  useEffect(() => {
+    if (!isOpen) return
+    const originalOverflow = document.body.style.overflow
+    const originalOverscroll = document.body.style.overscrollBehavior
+    document.body.style.overflow = 'hidden'
+    document.body.style.overscrollBehavior = 'none'
+
+    return () => {
+      document.body.style.overflow = originalOverflow
+      document.body.style.overscrollBehavior = originalOverscroll
+    }
+  }, [isOpen])
+
   const activeLoan = loanDetails || cachedDetails || loan || cachedLoan
 
   if ((!isOpen && !isClosing) || !activeLoan) return null
@@ -112,8 +126,9 @@ export default function LoanDetailSheet({
     <>
       {/* Dimmed Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-slate-950 backdrop-blur-xs transition-opacity duration-250 ease-out"
+        className="fixed inset-0 z-40 bg-slate-950 backdrop-blur-xs transition-opacity duration-250 ease-out touch-none"
         style={{ opacity: backdropOpacity }}
+        onTouchMove={(e) => e.preventDefault()}
         onClick={handleDismiss}
         aria-hidden="true"
       />
@@ -216,7 +231,7 @@ export default function LoanDetailSheet({
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        <div className="flex-1 overflow-y-auto overscroll-y-contain px-6 py-5 space-y-6">
           {/* Loan Title & Category Badge */}
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3.5 min-w-0">

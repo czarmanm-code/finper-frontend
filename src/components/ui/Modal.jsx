@@ -12,18 +12,33 @@ export default function Modal({ isOpen = true, title, onClose, children, maxWidt
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose, isOpen])
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (!isOpen) return
+    const originalOverflow = document.body.style.overflow
+    const originalOverscroll = document.body.style.overscrollBehavior
+    document.body.style.overflow = 'hidden'
+    document.body.style.overscrollBehavior = 'none'
+
+    return () => {
+      document.body.style.overflow = originalOverflow
+      document.body.style.overscrollBehavior = originalOverscroll
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="fixed inset-0 bg-slate-950/50"
+        className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs touch-none"
+        onTouchMove={(e) => e.preventDefault()}
         onClick={onClose}
         aria-hidden="true"
       />
 
       <div
-        className={`relative w-full ${maxWidth} bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-6 max-h-[85vh] overflow-y-auto`}
+        className={`relative w-full ${maxWidth} bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-6 max-h-[85vh] overflow-y-auto overscroll-y-contain`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
