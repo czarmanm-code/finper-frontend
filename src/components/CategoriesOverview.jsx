@@ -185,13 +185,15 @@ function SectionRollupCard({ section, onSelectCategory }) {
           </div>
 
           <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusColor}`}>
-            {isIncome
-              ? `${displayPercent}% received`
+            {!hasBudget
+              ? 'No target'
+              : isIncome
+              ? `${displayPercent} received`
               : section.isSavings
-              ? `${displayPercent}% saved`
+              ? `${displayPercent} saved`
               : isOverBudget
-              ? `${displayPercent}% (Over)`
-              : `${displayPercent}% spent`}
+              ? `${displayPercent} (Over)`
+              : `${displayPercent} spent`}
           </span>
         </div>
 
@@ -317,7 +319,7 @@ function SectionRollupCard({ section, onSelectCategory }) {
                               : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                           }`}
                         >
-                          {catPercent}%
+                          {catPercent}
                         </span>
                       )}
                       <span className="text-xs font-bold text-slate-900 dark:text-white">
