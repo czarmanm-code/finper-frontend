@@ -34,6 +34,7 @@ export async function getCategories(typeFilter = null) {
         icon: c.icon || 'TagIcon',
         color: c.color || '#3b82f6',
         sectionId: c.sectionId,
+        sectionName: c.sectionName || null,
         plannedAmount: Number(c.plannedAmount) || 0,
       }))
     }

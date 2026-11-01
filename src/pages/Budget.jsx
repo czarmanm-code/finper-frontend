@@ -16,7 +16,7 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline'
-import { getCategories, updateCategoryPlannedAmount } from '../services/categoriesService'
+import { getCategories, updateCategoryPlannedAmount, getSections } from '../services/categoriesService'
 import { getTransactions, deleteTransaction } from '../services/transactionsService'
 import { HEROICON_MAP } from '../utils/heroicons'
 import MonthSelector from '../components/MonthSelector'
@@ -39,14 +39,28 @@ export default function Budget() {
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false)
   const [clearTargetConfirm, setClearTargetConfirm] = useState(null)
 
-  // Fetch live categories and movements directly from MongoDB API
+  // Fetch live categories, sections, and movements directly from MongoDB API
   const loadBudgetData = useCallback(async () => {
     try {
-      const [fetchedCats, fetchedTxs] = await Promise.all([
+      const [fetchedCats, fetchedTxs, fetchedSections] = await Promise.all([
         getCategories(),
         getTransactions(),
+        getSections(),
       ])
-      setCategories(fetchedCats)
+
+      const secMap = new Map()
+      if (Array.isArray(fetchedSections)) {
+        fetchedSections.forEach((s) => {
+          secMap.set(String(s.id || s._id), s.name)
+        })
+      }
+
+      const enhancedCats = (fetchedCats || []).map((c) => ({
+        ...c,
+        sectionName: c.sectionName || secMap.get(String(c.sectionId)) || '',
+      }))
+
+      setCategories(enhancedCats)
       setTransactions(fetchedTxs)
     } catch (err) {
       console.error('Failed to load budget data:', err)
@@ -115,6 +129,8 @@ export default function Budget() {
         type: cat.type,
         icon: cat.icon || 'TagIcon',
         color: cat.color || '#3b82f6',
+        sectionId: cat.sectionId,
+        sectionName: cat.sectionName || '',
         planned,
         actual,
         percent,
@@ -132,7 +148,10 @@ export default function Budget() {
       if (activeTab === 'expense' && row.type !== 'expense') return false
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase()
-        return row.name.toLowerCase().includes(query)
+        return (
+          row.name.toLowerCase().includes(query) ||
+          (row.sectionName && row.sectionName.toLowerCase().includes(query))
+        )
       }
       return true
     })
@@ -161,15 +180,23 @@ export default function Budget() {
   // Helper to determine if a budget row is savings/investment
   const isSavingsRow = useCallback(
     (row) => {
-      const lower = (row.name || '').toLowerCase()
-      return (
-        lower.includes('saving') ||
-        lower.includes('ahorro') ||
-        lower.includes('invest') ||
-        lower.includes('invers') ||
-        lower.includes('emergency fund') ||
-        lower.includes('fondo de emergencia')
-      )
+      const lowerName = (row.name || '').toLowerCase()
+      const lowerSection = (row.sectionName || '').toLowerCase()
+
+      const isSavingsTerm = (term) =>
+        term.includes('saving') ||
+        term.includes('ahorro') ||
+        term.includes('invest') ||
+        term.includes('invers') ||
+        term.includes('retiro') ||
+        term.includes('retirement') ||
+        term.includes('emergency fund') ||
+        term.includes('fondo de emergencia') ||
+        term.includes('cetes') ||
+        term.includes('cajita') ||
+        term.includes('gbm')
+
+      return isSavingsTerm(lowerSection) || isSavingsTerm(lowerName)
     },
     []
   )
@@ -641,7 +668,7 @@ export default function Budget() {
                                   {row.name}
                                 </p>
                                 <span className="text-[11px] capitalize text-slate-400">
-                                  {isIncome ? 'Expected Inflow' : 'Spending Limit'}
+                                  {row.sectionName || (isIncome ? 'Expected Inflow' : 'Spending Limit')}
                                 </span>
                               </div>
                             </div>

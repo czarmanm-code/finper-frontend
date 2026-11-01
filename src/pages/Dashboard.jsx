@@ -94,6 +94,7 @@ export default function Dashboard() {
           type: tx.type === 'income' ? 'Income' : 'Expense',
           category: cat ? cat.name : tx.categoryName || 'General',
           categoryId: tx.categoryId,
+          sectionName: cat?.sectionName || '',
           amount: Number(tx.amount) || 0,
           icon: cat?.icon || (tx.type === 'income' ? 'BanknotesIcon' : 'TagIcon'),
           color: cat?.color || (tx.type === 'income' ? '#10b981' : '#6366f1'),
@@ -101,9 +102,20 @@ export default function Dashboard() {
         }
       })
 
+      // Full month mapped transactions for global aggregations
+      const allMapped = currentMonthTxs.map((tx) => {
+        const cat = categoryMap.get(tx.categoryId)
+        return {
+          type: tx.type === 'income' ? 'Income' : 'Expense',
+          amount: Number(tx.amount) || 0,
+          category: cat ? cat.name : tx.categoryName || '',
+          sectionName: cat?.sectionName || '',
+        }
+      })
+
       setCategories(categoriesToShow)
       setMovements(mappedMovements)
-      setAllMonthTransactions(currentMonthTxs)
+      setAllMonthTransactions(allMapped)
     } catch (err) {
       console.error('Failed to load dashboard data:', err)
     } finally {
@@ -118,26 +130,32 @@ export default function Dashboard() {
   // Identify savings and investment categories
   const isSavingsMovement = useCallback((m) => {
     const catName = (m.category || '').toLowerCase()
-    return (
-      catName.includes('saving') ||
-      catName.includes('ahorro') ||
-      catName.includes('invest') ||
-      catName.includes('invers') ||
-      catName.includes('emergency fund') ||
-      catName.includes('fondo de emergencia')
-    )
+    const sectionName = (m.sectionName || '').toLowerCase()
+    const isSavingsTerm = (term) =>
+      term.includes('saving') ||
+      term.includes('ahorro') ||
+      term.includes('invest') ||
+      term.includes('invers') ||
+      term.includes('retiro') ||
+      term.includes('retirement') ||
+      term.includes('emergency fund') ||
+      term.includes('fondo de emergencia') ||
+      term.includes('cetes') ||
+      term.includes('cajita') ||
+      term.includes('gbm')
+    return isSavingsTerm(sectionName) || isSavingsTerm(catName)
   }, [])
 
-  // Compute live budget summary metrics
-  const totalIncome = movements
+  // Compute live budget summary metrics using all transactions for the selected month
+  const totalIncome = allMonthTransactions
     .filter((m) => m.type === 'Income')
     .reduce((sum, m) => sum + m.amount, 0)
 
-  const totalLivingExpenses = movements
+  const totalLivingExpenses = allMonthTransactions
     .filter((m) => m.type === 'Expense' && !isSavingsMovement(m))
     .reduce((sum, m) => sum + m.amount, 0)
 
-  const totalSavings = movements
+  const totalSavings = allMonthTransactions
     .filter((m) => isSavingsMovement(m))
     .reduce((sum, m) => sum + m.amount, 0)
 
