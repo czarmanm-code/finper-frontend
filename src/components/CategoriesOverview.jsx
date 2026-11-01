@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom'
 import {
   FolderIcon,
   Squares2X2Icon,
-  ChevronDownIcon,
   ArrowRightIcon,
   ViewColumnsIcon,
 } from '@heroicons/react/24/outline'
 import CategoryCard from './CategoryCard'
+import SectionDetailSheet from './SectionDetailSheet'
 import { HEROICON_MAP } from '../utils/heroicons'
 
 export default function CategoriesOverview({
@@ -19,6 +19,7 @@ export default function CategoriesOverview({
   const [viewMode, setViewMode] = useState(() => {
     return localStorage.getItem('finper_category_dashboard_view') || 'sections'
   })
+  const [activeSheetSection, setActiveSheetSection] = useState(null)
 
   function toggleViewMode(mode) {
     setViewMode(mode)
@@ -101,8 +102,7 @@ export default function CategoriesOverview({
             <SectionRollupCard
               key={section.id}
               section={section}
-              onSelectCategory={onSelectCategory}
-              onSetTarget={onSetTarget}
+              onInspectSection={setActiveSheetSection}
             />
           ))}
         </div>
@@ -120,6 +120,14 @@ export default function CategoriesOverview({
           ))}
         </div>
       )}
+
+      {/* Side-over Drilldown Sheet for Section */}
+      <SectionDetailSheet
+        isOpen={Boolean(activeSheetSection)}
+        section={activeSheetSection}
+        onClose={() => setActiveSheetSection(null)}
+        onSelectCategory={onSelectCategory}
+      />
     </section>
   )
 }
@@ -130,8 +138,7 @@ function formatPercent(val) {
   return `${Math.round(val)}%`
 }
 
-function SectionRollupCard({ section, onSelectCategory }) {
-  const [isExpanded, setIsExpanded] = useState(false)
+function SectionRollupCard({ section, onInspectSection }) {
   const Icon = HEROICON_MAP[section.icon] || FolderIcon
   const isIncome = section.isIncome
   const hasBudget = section.totalBudget > 0
@@ -159,13 +166,16 @@ function SectionRollupCard({ section, onSelectCategory }) {
     : section.color || '#3b82f6'
 
   return (
-    <div className="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-4 transition-all hover:border-slate-300 dark:hover:border-slate-700">
+    <div
+      onClick={() => onInspectSection?.(section)}
+      className="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-4 transition-all hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-xs cursor-pointer group"
+    >
       {/* Top Header */}
       <div>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <span
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs"
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs transition-transform group-hover:scale-105"
               style={{
                 backgroundColor: `${section.color}18`,
                 color: section.color,
@@ -174,7 +184,7 @@ function SectionRollupCard({ section, onSelectCategory }) {
               <Icon className="w-5 h-5" />
             </span>
             <div className="min-w-0">
-              <h3 className="font-bold text-slate-900 dark:text-white text-base truncate">
+              <h3 className="font-bold text-slate-900 dark:text-white text-base truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                 {section.name}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -246,96 +256,15 @@ function SectionRollupCard({ section, onSelectCategory }) {
         </div>
       </div>
 
-      {/* Accordion Footer: Drill-down Button */}
-      <div className="border-t border-slate-200/60 dark:border-slate-800/80 pt-3">
-        <button
-          type="button"
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition cursor-pointer py-0.5"
-        >
-          <span className="flex items-center gap-1.5">
-            <span>{isExpanded ? 'Hide Categories' : 'Inspect Categories'}</span>
-            <span className="text-[10px] text-slate-400">({section.categories.length})</span>
-          </span>
-          <ChevronDownIcon
-            className={`w-3.5 h-3.5 transition-transform duration-200 ${
-              isExpanded ? 'rotate-180' : ''
-            }`}
-          />
-        </button>
-
-        {/* Child Categories Drawer */}
-        {isExpanded && (
-          <div className="mt-3 pt-2 border-t border-slate-200/40 dark:border-slate-800/60 space-y-1.5">
-            {section.categories.length === 0 ? (
-              <p className="text-xs text-slate-400 py-1 text-center">No categories in this group.</p>
-            ) : (
-              section.categories.map((cat) => {
-                const CatIcon = cat.icon || HEROICON_MAP.TagIcon
-                const catHasBudget = cat.budget > 0
-                const rawCatPercent = catHasBudget ? (cat.spent / cat.budget) * 100 : 0
-                const catPercent = formatPercent(rawCatPercent)
-                const catOver = !isIncome && catHasBudget && cat.spent > cat.budget
-
-                return (
-                  <div
-                    key={cat.id}
-                    onClick={() => onSelectCategory?.(cat)}
-                    className="p-2 rounded-xl flex items-center justify-between gap-3 hover:bg-white dark:hover:bg-slate-800/80 border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/60 transition cursor-pointer group"
-                    title="Click to inspect category activity"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span
-                        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
-                        style={{
-                          backgroundColor: `${cat.color}18`,
-                          color: cat.color,
-                        }}
-                      >
-                        <CatIcon className="w-3.5 h-3.5" />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-                          {cat.name}
-                        </p>
-                        <span className="text-[10px] text-slate-400">
-                          {catHasBudget
-                            ? `$${cat.spent.toLocaleString('en-US', {
-                                maximumFractionDigits: 0,
-                              })} / $${cat.budget.toLocaleString('en-US', {
-                                maximumFractionDigits: 0,
-                              })}`
-                            : `$${cat.spent.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      {catHasBudget && (
-                        <span
-                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                            catOver
-                              ? 'bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                          }`}
-                        >
-                          {catPercent}
-                        </span>
-                      )}
-                      <span className="text-xs font-bold text-slate-900 dark:text-white">
-                        $
-                        {cat.spent.toLocaleString('en-US', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                )
-              })
-            )}
-          </div>
-        )}
+      {/* Footer: Side-over Trigger */}
+      <div className="border-t border-slate-200/60 dark:border-slate-800/80 pt-3 flex items-center justify-between">
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+          {section.categories.length} {section.categories.length === 1 ? 'category' : 'categories'}
+        </span>
+        <span className="text-xs font-semibold text-sky-600 dark:text-sky-400 flex items-center gap-1 group-hover:gap-1.5 transition-all">
+          <span>Inspect breakdown</span>
+          <ArrowRightIcon className="w-3.5 h-3.5" />
+        </span>
       </div>
     </div>
   )

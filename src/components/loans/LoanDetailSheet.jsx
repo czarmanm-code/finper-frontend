@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   XMarkIcon,
   PlusIcon,
@@ -24,12 +24,37 @@ export default function LoanDetailSheet({
   onDeleteTransaction,
 }) {
   const [deleteTargetTx, setDeleteTargetTx] = useState(null)
+  const [cachedLoan, setCachedLoan] = useState(loan)
+  const [cachedDetails, setCachedDetails] = useState(loanDetails)
   const [isClosing, setIsClosing] = useState(false)
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const touchStartY = useRef(0)
 
-  if (!isOpen || !loan) return null
+  useEffect(() => {
+    if (loan) {
+      setCachedLoan(loan)
+      setCachedDetails(loanDetails)
+      setIsClosing(false)
+      setDragOffset(0)
+    }
+  }, [loan, loanDetails])
+
+  // ESC key support
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        handleDismiss()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, isClosing])
+
+  const activeLoan = loanDetails || cachedDetails || loan || cachedLoan
+
+  if ((!isOpen && !isClosing) || !activeLoan) return null
 
   const handleDismiss = () => {
     if (isClosing) return
@@ -64,7 +89,6 @@ export default function LoanDetailSheet({
     }
   }
 
-  const activeLoan = loanDetails || loan
   const category = activeLoan.categoryId || {}
   const color = category.color || '#3b82f6'
 
@@ -97,8 +121,8 @@ export default function LoanDetailSheet({
       {/* Sheet Container: Bottom Sheet on Mobile (<sm), Slide-over on Desktop (sm+) */}
       <aside
         className={`fixed z-50 bg-white dark:bg-slate-900 shadow-2xl flex flex-col
-          inset-x-0 bottom-0 h-[88vh] rounded-t-3xl border-t border-slate-200 dark:border-slate-800
-          sm:inset-y-0 sm:right-0 sm:left-auto sm:h-full sm:w-full sm:max-w-lg sm:rounded-none sm:border-t-0 sm:border-l ${
+          inset-x-0 bottom-0 h-[85vh] rounded-t-3xl border-t border-slate-200 dark:border-slate-800
+          sm:inset-y-0 sm:right-0 sm:left-auto sm:h-full sm:w-full sm:max-w-md sm:rounded-none sm:border-t-0 sm:border-l ${
             isClosing
               ? 'translate-y-full sm:translate-y-0 sm:translate-x-full transition-transform duration-250 ease-in'
               : isDragging
@@ -121,13 +145,8 @@ export default function LoanDetailSheet({
           <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto" />
         </div>
 
-        {/* Top Bar: Title & Close Button */}
-        <div
-          className="flex items-center justify-between px-6 pt-2 pb-2 sm:pt-6 border-b border-slate-100 dark:border-slate-800/80 shrink-0 touch-none sm:touch-auto"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
+        {/* Top Bar: Title & Action/Close Buttons */}
+        <div className="flex items-center justify-between px-6 pt-2 pb-2 sm:pt-6 border-b border-slate-100 dark:border-slate-800/80 shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
               Loan Trajectory & Amortization
@@ -143,7 +162,12 @@ export default function LoanDetailSheet({
             </span>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div
+            className="flex items-center gap-1"
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+          >
             {onEditLoan && (
               <button
                 type="button"
@@ -174,8 +198,16 @@ export default function LoanDetailSheet({
 
             <button
               type="button"
-              onClick={handleDismiss}
-              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDismiss()
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                handleDismiss()
+              }}
+              className="p-2 -mr-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               aria-label="Close sheet"
             >
               <XMarkIcon className="w-5 h-5" />
@@ -384,4 +416,3 @@ export default function LoanDetailSheet({
     </>
   )
 }
-

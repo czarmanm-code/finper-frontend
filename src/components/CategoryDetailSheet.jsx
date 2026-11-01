@@ -40,6 +40,18 @@ export default function CategoryDetailSheet({
     }
   }, [item])
 
+  // ESC key support
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        handleDismiss()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, isClosing])
+
   const activeItem = item || cachedItem
   const isSection = type === 'section'
 
@@ -189,12 +201,7 @@ export default function CategoryDetailSheet({
         </div>
 
         {/* Top Bar: Badges & Close Button */}
-        <div
-          className="flex items-center justify-between px-6 pt-2 pb-2 sm:pt-6 border-b border-slate-100 dark:border-slate-800/80 shrink-0 touch-none sm:touch-auto"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
+        <div className="flex items-center justify-between px-6 pt-2 pb-2 sm:pt-6 border-b border-slate-100 dark:border-slate-800/80 shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
               {isSection ? 'Section Drill-down' : isIncome ? 'Income Source' : 'Expense Category'}
@@ -208,8 +215,16 @@ export default function CategoryDetailSheet({
 
           <button
             type="button"
-            onClick={handleDismiss}
-            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDismiss()
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              handleDismiss()
+            }}
+            className="p-2 -mr-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
             aria-label="Close details"
           >
             <XMarkIcon className="w-5 h-5" />
