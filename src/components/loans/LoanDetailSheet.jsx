@@ -12,6 +12,7 @@ import {
 import PayoffChart from './PayoffChart'
 import ConfirmDialog from '../ui/ConfirmDialog'
 import { formatFrequency } from '../../utils/loanUtils'
+import { usePrivacy } from '../../context/PrivacyContext'
 
 export default function LoanDetailSheet({
   isOpen,
@@ -23,6 +24,7 @@ export default function LoanDetailSheet({
   onAddPayment,
   onDeleteTransaction,
 }) {
+  const { mask } = usePrivacy()
   const [deleteTargetTx, setDeleteTargetTx] = useState(null)
   const [cachedLoan, setCachedLoan] = useState(loan)
   const [cachedDetails, setCachedDetails] = useState(loanDetails)
@@ -272,7 +274,7 @@ export default function LoanDetailSheet({
                   Remaining Debt
                 </span>
                 <div className="text-3xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">
-                  ${currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {mask(currentBalance)}
                 </div>
               </div>
 
@@ -281,7 +283,7 @@ export default function LoanDetailSheet({
                   Total Loan
                 </span>
                 <div className="text-lg font-semibold text-slate-600 dark:text-slate-300 mt-0.5">
-                  ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 0 })}
+                  {mask(totalAmount, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
                 </div>
               </div>
             </div>
@@ -296,7 +298,7 @@ export default function LoanDetailSheet({
               </div>
               <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-semibold">
                 <span className="text-sky-600 dark:text-sky-400">{progressPercent}% Paid Off</span>
-                <span>${totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })} Amortized</span>
+                <span>{mask(totalPaid)} Amortized</span>
               </div>
             </div>
 
@@ -306,7 +308,7 @@ export default function LoanDetailSheet({
                 Scheduled Installment:
               </span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
-                ${expectedPayment.toLocaleString('en-US')} / {formatFrequency(activeLoan.paymentFrequency)}
+                {mask(expectedPayment)} / {formatFrequency(activeLoan.paymentFrequency)}
               </span>
             </div>
 
@@ -392,7 +394,7 @@ export default function LoanDetailSheet({
 
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
-                        -${Number(tx.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {mask(Number(tx.amount), { sign: '-' })}
                       </span>
 
                       {onDeleteTransaction && (

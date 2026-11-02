@@ -11,6 +11,7 @@ import Register from './pages/Register'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { DateProvider } from './context/DateContext'
+import { PrivacyProvider } from './context/PrivacyContext'
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { user, isAdmin, isLoading, needsSetup } = useAuth()
@@ -43,7 +44,8 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <DateProvider>
-          <BrowserRouter>
+          <PrivacyProvider>
+            <BrowserRouter>
           <Routes>
             {/* Public Auth Routes */}
             <Route path="/login" element={<Login />} />
@@ -115,6 +117,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
+          </PrivacyProvider>
       </DateProvider>
     </AuthProvider>
   </ThemeProvider>

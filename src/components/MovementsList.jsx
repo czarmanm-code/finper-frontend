@@ -1,5 +1,6 @@
 import { HEROICON_MAP } from '../utils/heroicons'
 import { PencilSquareIcon } from '@heroicons/react/24/outline'
+import { usePrivacy } from '../context/PrivacyContext'
 
 export default function MovementsList({ movements, onEditTransaction, monthName }) {
   return (
@@ -46,6 +47,7 @@ function MovementItem({
   color = '#3b82f6',
   description,
 }) {
+  const { mask } = usePrivacy()
   const isIncome = type === 'income' || type === 'Income' || type === 'Ingreso'
 
   const IconComponent = HEROICON_MAP[icon] || (isIncome ? HEROICON_MAP.BanknotesIcon : HEROICON_MAP.TagIcon)
@@ -87,7 +89,11 @@ function MovementItem({
               : 'text-rose-600 dark:text-rose-400'
           }`}
         >
-          {isIncome ? '+' : '-'}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {mask(amount, {
+            sign: isIncome ? '+' : '-',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </span>
 
         {onEdit && (

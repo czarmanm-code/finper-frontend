@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { HEROICON_MAP } from '../utils/heroicons'
 import { useDateFilter } from '../context/DateContext'
+import { usePrivacy } from '../context/PrivacyContext'
 
 function formatPercent(val) {
   if (!val || val <= 0) return '0%'
@@ -24,6 +25,7 @@ export default function SectionDetailSheet({
   section = null,
   onSelectCategory,
 }) {
+  const { mask } = usePrivacy()
   const { monthLabel } = useDateFilter()
   const [cachedSection, setCachedSection] = useState(section)
   const [isClosing, setIsClosing] = useState(false)
@@ -257,10 +259,7 @@ export default function SectionDetailSheet({
                   {isIncome ? 'Actual Received' : 'Actual Spent'}
                 </span>
                 <div className="text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">
-                  ${activeSection.totalSpent.toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
+                  {mask(activeSection.totalSpent)}
                 </div>
               </div>
 
@@ -270,10 +269,7 @@ export default function SectionDetailSheet({
                     {isIncome ? 'Target Goal' : 'Planned Budget'}
                   </span>
                   <div className="text-lg font-bold text-slate-600 dark:text-slate-300 mt-0.5">
-                    ${activeSection.totalBudget.toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    {mask(activeSection.totalBudget)}
                   </div>
                 </div>
               )}
@@ -300,19 +296,10 @@ export default function SectionDetailSheet({
                   ? isIncome
                     ? activeSection.totalSpent >= activeSection.totalBudget
                       ? 'Goal reached!'
-                      : `$${(activeSection.totalBudget - activeSection.totalSpent).toLocaleString('en-US', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} left to goal`
+                      : `${mask(activeSection.totalBudget - activeSection.totalSpent)} left to goal`
                     : isOverBudget
-                    ? `+$${(activeSection.totalSpent - activeSection.totalBudget).toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })} over budget`
-                    : `$${(activeSection.totalBudget - activeSection.totalSpent).toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })} remaining`
+                    ? `+${mask(activeSection.totalSpent - activeSection.totalBudget)} over budget`
+                    : `${mask(activeSection.totalBudget - activeSection.totalSpent)} remaining`
                   : '—'}
               </span>
             </div>
@@ -375,17 +362,8 @@ export default function SectionDetailSheet({
                             </p>
                             <span className="text-[11px] text-slate-400">
                               {catHasBudget
-                                ? `$${cat.spent.toLocaleString('en-US', {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  })} of $${cat.budget.toLocaleString('en-US', {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  })}`
-                                : `$${cat.spent.toLocaleString('en-US', {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  })}`}
+                                ? `${mask(cat.spent)} of ${mask(cat.budget)}`
+                                : mask(cat.spent)}
                             </span>
                           </div>
                         </div>

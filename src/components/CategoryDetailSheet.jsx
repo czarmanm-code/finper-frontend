@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { HEROICON_MAP } from '../utils/heroicons'
 import ConfirmDialog from './ui/ConfirmDialog'
+import { usePrivacy } from '../context/PrivacyContext'
 
 export default function CategoryDetailSheet({
   isOpen,
@@ -25,6 +26,7 @@ export default function CategoryDetailSheet({
   onAddTransaction,
   onEditTarget,
 }) {
+  const { mask } = usePrivacy()
   const [deleteTargetTx, setDeleteTargetTx] = useState(null)
   const [cachedItem, setCachedItem] = useState(item)
   const [isClosing, setIsClosing] = useState(false)
@@ -298,7 +300,7 @@ export default function CategoryDetailSheet({
                   {isIncome ? 'Actual Inflows' : 'Actual Spending'}
                 </span>
                 <div className="text-2xl font-bold text-slate-900 dark:text-white mt-0.5 tracking-tight">
-                  ${totalSpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {mask(totalSpent)}
                 </div>
               </div>
 
@@ -308,7 +310,7 @@ export default function CategoryDetailSheet({
                     {isIncome ? 'Target Goal' : 'Budget Limit'}
                   </span>
                   <div className="text-lg font-semibold text-slate-600 dark:text-slate-300 mt-0.5">
-                    ${budget.toLocaleString('en-US')}
+                    {mask(budget, { maximumFractionDigits: 0 })}
                   </div>
                 </div>
               )}
@@ -342,7 +344,7 @@ export default function CategoryDetailSheet({
                   <span>
                     {isIncome ? (
                       remaining > 0 ? (
-                        `$${remaining.toLocaleString('en-US', { minimumFractionDigits: 2 })} to goal`
+                        `${mask(remaining)} to goal`
                       ) : (
                         <span className="text-emerald-600 dark:text-emerald-400 font-medium">
                           Goal reached!
@@ -350,10 +352,10 @@ export default function CategoryDetailSheet({
                       )
                     ) : isOverBudget ? (
                       <span className="text-rose-600 dark:text-rose-400 font-medium">
-                        +${Math.abs(remaining).toLocaleString('en-US', { minimumFractionDigits: 2 })} over
+                        +{mask(Math.abs(remaining))} over
                       </span>
                     ) : (
-                      `$${remaining.toLocaleString('en-US', { minimumFractionDigits: 2 })} remaining`
+                      `${mask(remaining)} remaining`
                     )}
                   </span>
                 </div>
@@ -445,8 +447,8 @@ export default function CategoryDetailSheet({
                               : 'text-slate-900 dark:text-white'
                           }`}
                         >
-                          {isTxIncome ? '+' : '-'}$
-                          {Number(tx.amount).toLocaleString('en-US', {
+                          {mask(Number(tx.amount), {
+                            sign: isTxIncome ? '+' : '-',
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}

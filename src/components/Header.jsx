@@ -1,7 +1,10 @@
-import { Bars3Icon, WalletIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, WalletIcon, PlusIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { SyncStatusBar } from './SyncStatusBar'
+import { usePrivacy } from '../context/PrivacyContext'
 
 export default function Header({ onMenuClick, onAddTransaction }) {
+  const { isPrivacyMode, togglePrivacyMode } = usePrivacy()
+
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur px-4 py-3">
       <div className="flex items-center gap-3">
@@ -23,6 +26,25 @@ export default function Header({ onMenuClick, onAddTransaction }) {
 
       <div className="flex items-center gap-2 sm:gap-3">
         <SyncStatusBar />
+
+        {/* Privacy Mode Toggle */}
+        <button
+          type="button"
+          onClick={togglePrivacyMode}
+          className={`p-2 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+            isPrivacyMode
+              ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/60'
+              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+          title={isPrivacyMode ? 'Privacy Mode Active (Click to show amounts)' : 'Hide amounts (Click for privacy mode)'}
+          aria-label={isPrivacyMode ? 'Show sensitive balances' : 'Hide sensitive balances'}
+        >
+          {isPrivacyMode ? (
+            <EyeSlashIcon className="w-5 h-5" />
+          ) : (
+            <EyeIcon className="w-5 h-5" />
+          )}
+        </button>
 
         {onAddTransaction && (
           <button

@@ -10,6 +10,7 @@ import { getLoans, getLoanById, createLoan, updateLoan, deleteLoan } from '../se
 import { getCategories } from '../services/categoriesService'
 import { deleteTransaction } from '../services/transactionsService'
 import { formatFrequency, toMonthlyEquivalent } from '../utils/loanUtils'
+import { usePrivacy } from '../context/PrivacyContext'
 import {
   CreditCardIcon,
   PlusIcon,
@@ -24,6 +25,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function Loans() {
+  const { mask } = usePrivacy()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [loans, setLoans] = useState([])
   const [categories, setCategories] = useState([])
@@ -200,7 +202,7 @@ export default function Loans() {
 
                 <div className="flex items-baseline gap-3">
                   <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
-                    ${totalCurrentDebt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {mask(totalCurrentDebt)}
                   </div>
                   <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                     across {activeLoans.length} tracked credits
@@ -210,7 +212,7 @@ export default function Loans() {
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
                   You have already amortized{' '}
                   <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
-                    ${totalPaidDebt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {mask(totalPaidDebt)}
                   </strong>{' '}
                   towards freedom from debt. Every monthly payment directly reduces your liabilities.
                 </p>
@@ -227,14 +229,14 @@ export default function Loans() {
                   <div>
                     <span className="text-[10px] text-slate-400 block">Monthly Commitments</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">
-                      ${totalMonthlyCommitment.toLocaleString('en-US', { maximumFractionDigits: 0 })}/mo
+                      {mask(totalMonthlyCommitment, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}/mo
                     </span>
                   </div>
 
                   <div className="text-right">
                     <span className="text-[10px] text-slate-400 block">Original Liabilities</span>
                     <span className="font-bold text-slate-500 dark:text-slate-400">
-                      ${totalOriginalDebt.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                      {mask(totalOriginalDebt, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
                     </span>
                   </div>
                 </div>
@@ -248,8 +250,8 @@ export default function Loans() {
                     />
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold">
-                    <span>${totalPaidDebt.toLocaleString('en-US', { maximumFractionDigits: 0 })} Paid</span>
-                    <span>${totalCurrentDebt.toLocaleString('en-US', { maximumFractionDigits: 0 })} Remaining</span>
+                    <span>{mask(totalPaidDebt, { maximumFractionDigits: 0, minimumFractionDigits: 0 })} Paid</span>
+                    <span>{mask(totalCurrentDebt, { maximumFractionDigits: 0, minimumFractionDigits: 0 })} Remaining</span>
                   </div>
                 </div>
               </div>
@@ -374,11 +376,11 @@ export default function Loans() {
                               Remaining Debt
                             </span>
                             <span className="text-xs text-slate-400">
-                              Original: ${Number(loan.totalAmount || loan.startingBalance).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                              Original: {mask(Number(loan.totalAmount || loan.startingBalance), { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
                             </span>
                           </div>
                           <div className="text-2xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">
-                            ${Number(loan.currentBalance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {mask(Number(loan.currentBalance))}
                           </div>
                         </div>
 
@@ -392,7 +394,7 @@ export default function Loans() {
                           </div>
                           <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                             <span className="text-sky-600 dark:text-sky-400">{progress}% Amortized</span>
-                            <span>${Number(loan.totalPaid).toLocaleString('en-US', { maximumFractionDigits: 0 })} Paid</span>
+                            <span>{mask(Number(loan.totalPaid), { maximumFractionDigits: 0, minimumFractionDigits: 0 })} Paid</span>
                           </div>
                         </div>
                       </div>
@@ -404,7 +406,7 @@ export default function Loans() {
                             Installment
                           </span>
                           <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                            ${Number(loan.expectedPayment).toLocaleString('en-US')}{' '}
+                            {mask(Number(loan.expectedPayment))}{' '}
                             <span className="text-[10px] text-slate-400 font-normal">
                               /{formatFrequency(loan.paymentFrequency)}
                             </span>

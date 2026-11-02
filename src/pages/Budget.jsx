@@ -22,6 +22,7 @@ import { HEROICON_MAP } from '../utils/heroicons'
 import MonthSelector from '../components/MonthSelector'
 import CategoryDetailSheet from '../components/CategoryDetailSheet'
 import { useDateFilter } from '../context/DateContext'
+import { usePrivacy } from '../context/PrivacyContext'
 
 function formatPercent(val) {
   if (!val || val <= 0) return '0%'
@@ -30,6 +31,7 @@ function formatPercent(val) {
 }
 
 export default function Budget() {
+  const { mask } = usePrivacy()
   const { monthLabel, isTransactionInSelectedMonth } = useDateFilter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [categories, setCategories] = useState([])
@@ -359,8 +361,8 @@ export default function Budget() {
                         : 'text-indigo-600 dark:text-indigo-400'
                     }`}
                   >
-                    {isDeficit ? '-' : isSurplus ? '+' : ''}$
-                    {Math.abs(plannedUnallocated).toLocaleString('en-US', {
+                    {mask(Math.abs(plannedUnallocated), {
+                      sign: isDeficit ? '-' : isSurplus ? '+' : '',
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
@@ -387,7 +389,7 @@ export default function Budget() {
                   <div className="flex flex-col">
                     <span className="text-[10px] text-slate-400">Income</span>
                     <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                      ${totalPlannedIncome.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                      {mask(totalPlannedIncome, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
                     </span>
                   </div>
 
@@ -396,7 +398,7 @@ export default function Budget() {
                   <div className="flex flex-col">
                     <span className="text-[10px] text-slate-400">Budgeted</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">
-                      ${totalPlannedBudgeted.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                      {mask(totalPlannedBudgeted, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
                     </span>
                   </div>
 
@@ -413,8 +415,11 @@ export default function Budget() {
                           : 'text-indigo-600 dark:text-indigo-400'
                       }`}
                     >
-                      {isDeficit ? '-' : isSurplus ? '+' : ''}$
-                      {Math.abs(plannedUnallocated).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                      {mask(Math.abs(plannedUnallocated), {
+                        sign: isDeficit ? '-' : isSurplus ? '+' : '',
+                        maximumFractionDigits: 0,
+                        minimumFractionDigits: 0,
+                      })}
                     </span>
                   </div>
                 </div>
@@ -431,7 +436,7 @@ export default function Budget() {
                             ? `${Math.max(Math.min((totalPlannedExpenses / totalPlannedIncome) * 100, 100), 1.5)}%`
                             : '0%',
                       }}
-                      title={`Expenses: $${totalPlannedExpenses.toLocaleString('en-US')}`}
+                      title={`Expenses: ${mask(totalPlannedExpenses)}`}
                     />
                     {/* Savings Share */}
                     <div
@@ -442,7 +447,7 @@ export default function Budget() {
                             ? `${Math.max(Math.min((totalPlannedSavings / totalPlannedIncome) * 100, Math.max(0, 100 - (totalPlannedExpenses / totalPlannedIncome) * 100)), 1.5)}%`
                             : '0%',
                       }}
-                      title={`Savings: $${totalPlannedSavings.toLocaleString('en-US')}`}
+                      title={`Savings: ${mask(totalPlannedSavings)}`}
                     />
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-slate-400">
@@ -480,12 +485,12 @@ export default function Budget() {
               </div>
               <div className="mt-2">
                 <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                  ${totalPlannedIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {mask(totalPlannedIncome)}
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
                   <span>Actual Received:</span>
                   <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                    ${totalActualIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {mask(totalActualIncome)}
                     {totalPlannedIncome > 0 && ` (${formatPercent((totalActualIncome / totalPlannedIncome) * 100)})`}
                   </span>
                 </div>
@@ -515,12 +520,12 @@ export default function Budget() {
               </div>
               <div className="mt-2">
                 <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                  ${totalPlannedExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {mask(totalPlannedExpenses)}
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
                   <span>Actual Spent:</span>
                   <span className="font-semibold text-rose-600 dark:text-rose-400">
-                    ${totalActualExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {mask(totalActualExpenses)}
                     {totalPlannedExpenses > 0 && ` (${formatPercent((totalActualExpenses / totalPlannedExpenses) * 100)})`}
                   </span>
                 </div>
@@ -550,12 +555,12 @@ export default function Budget() {
               </div>
               <div className="mt-2">
                 <div className="text-2xl font-bold text-sky-600 dark:text-sky-400">
-                  ${totalPlannedSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {mask(totalPlannedSavings)}
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
                   <span>Actual Saved:</span>
                   <span className="font-semibold text-sky-600 dark:text-sky-400">
-                    ${totalActualSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {mask(totalActualSavings)}
                     {totalPlannedSavings > 0 && ` (${formatPercent((totalActualSavings / totalPlannedSavings) * 100)})`}
                   </span>
                 </div>
@@ -752,7 +757,7 @@ export default function Budget() {
                                 className="font-semibold text-slate-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400 inline-flex items-center gap-1.5 transition text-left cursor-pointer"
                                 title="Click to edit target"
                               >
-                                <span>${row.planned.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                <span>{mask(row.planned)}</span>
                                 <PencilSquareIcon className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-slate-400" />
                               </button>
                             ) : (
@@ -777,7 +782,7 @@ export default function Budget() {
                           {/* Actual Spent / Received */}
                           <td className="py-3.5 px-4">
                             <span className="font-semibold text-slate-700 dark:text-slate-200">
-                              ${row.actual.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {mask(row.actual)}
                             </span>
                           </td>
 
@@ -792,7 +797,7 @@ export default function Budget() {
                                   </span>
                                 ) : (
                                   <span className="text-xs text-slate-500 dark:text-slate-400">
-                                    ${row.diff.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} pending
+                                    {mask(row.diff)} pending
                                   </span>
                                 )
                               ) : isSavings ? (
@@ -803,13 +808,13 @@ export default function Budget() {
                                   </span>
                                 ) : (
                                   <span className="text-xs text-slate-600 dark:text-slate-300">
-                                    ${row.diff.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} remaining
+                                    {mask(row.diff)} remaining
                                   </span>
                                 )
                               ) : row.isOverBudget ? (
                                 <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900">
                                   <ExclamationTriangleIcon className="w-3.5 h-3.5" />
-                                  <span>${Math.abs(row.diff).toLocaleString('en-US')} over budget</span>
+                                  <span>{mask(Math.abs(row.diff))} over budget</span>
                                 </span>
                               ) : row.diff === 0 ? (
                                 <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
@@ -818,7 +823,7 @@ export default function Budget() {
                                 </span>
                               ) : (
                                 <span className="text-xs text-slate-600 dark:text-slate-300">
-                                  ${row.diff.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} remaining
+                                  {mask(row.diff)} remaining
                                 </span>
                               )
                             ) : (

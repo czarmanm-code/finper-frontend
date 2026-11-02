@@ -6,8 +6,10 @@ import {
   ExclamationTriangleIcon,
   ArrowTrendingUpIcon,
 } from '@heroicons/react/24/outline'
+import { usePrivacy } from '../context/PrivacyContext'
 
 export default function BudgetSummary({ month, income = 0, expenses = 0, savings = 0 }) {
+  const { mask } = usePrivacy()
   const available = income - expenses - savings
   const isPositive = available > 0
   const isNegative = available < 0
@@ -82,8 +84,8 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
                     : 'text-indigo-600 dark:text-indigo-400'
                 }`}
               >
-                {isNegative ? '-' : isPositive ? '+' : ''}$
-                {Math.abs(available).toLocaleString('en-US', {
+                {mask(Math.abs(available), {
+                  sign: isNegative ? '-' : isPositive ? '+' : '',
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -110,7 +112,7 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
               <div className="flex flex-col">
                 <span className="text-[10px] text-slate-400">Inflows</span>
                 <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                  ${income.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                  {mask(income, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
                 </span>
               </div>
 
@@ -119,7 +121,7 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
               <div className="flex flex-col">
                 <span className="text-[10px] text-slate-400">Expenses</span>
                 <span className="font-bold text-rose-600 dark:text-rose-400">
-                  ${expenses.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                  {mask(expenses, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
                 </span>
               </div>
 
@@ -128,7 +130,7 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
               <div className="flex flex-col">
                 <span className="text-[10px] text-slate-400">Savings</span>
                 <span className="font-bold text-sky-600 dark:text-sky-400">
-                  ${savings.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                  {mask(savings, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
                 </span>
               </div>
 
@@ -145,8 +147,11 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
                       : 'text-indigo-600 dark:text-indigo-400'
                   }`}
                 >
-                  {isNegative ? '-' : isPositive ? '+' : ''}$
-                  {Math.abs(available).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                  {mask(Math.abs(available), {
+                    sign: isNegative ? '-' : isPositive ? '+' : '',
+                    maximumFractionDigits: 0,
+                    minimumFractionDigits: 0,
+                  })}
                 </span>
               </div>
             </div>
@@ -162,7 +167,7 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
                       ? `${Math.max((expenses / income) * 100, 1.5)}%`
                       : '0%',
                   }}
-                  title={`Expenses: $${expenses.toLocaleString('en-US')}`}
+                  title={`Expenses: ${mask(expenses)}`}
                 />
                 {/* Savings Share */}
                 <div
@@ -172,7 +177,7 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
                       ? `${Math.max((savings / income) * 100, 1.5)}%`
                       : '0%',
                   }}
-                  title={`Savings: $${savings.toLocaleString('en-US')}`}
+                  title={`Savings: ${mask(savings)}`}
                 />
                 {/* Remaining Available Share */}
                 {isPositive && (
@@ -181,7 +186,7 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
                     style={{
                       width: `${Math.max(0, 100 - (expenses / income) * 100 - (savings / income) * 100)}%`,
                     }}
-                    title={`Available: $${available.toLocaleString('en-US')}`}
+                    title={`Available: ${mask(available)}`}
                   />
                 )}
               </div>
@@ -215,7 +220,7 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-slate-900 dark:text-white">
-              ${income.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {mask(income)}
             </div>
             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Total income received this month
@@ -241,7 +246,7 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-rose-600 dark:text-rose-400">
-              ${expenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {mask(expenses)}
             </div>
             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {income > 0 ? `${expensesPercentText} of total inflows` : 'Total spent'}
@@ -269,7 +274,7 @@ export default function BudgetSummary({ month, income = 0, expenses = 0, savings
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-sky-600 dark:text-sky-400">
-              ${savings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {mask(savings)}
             </div>
             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {income > 0 ? `${savingsPercentText} of total inflows` : 'Target reserve'}

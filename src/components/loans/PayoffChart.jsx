@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { usePrivacy } from '../../context/PrivacyContext'
 
 export default function PayoffChart({ timeline = [], startingBalance = 0, currentBalance = 0, loanName = '' }) {
+  const { mask } = usePrivacy()
   const [hoveredPoint, setHoveredPoint] = useState(null)
 
   if (!timeline || timeline.length === 0) {
@@ -64,7 +66,7 @@ export default function PayoffChart({ timeline = [], startingBalance = 0, curren
       <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-400">
         <span>Balance Payoff Trajectory</span>
         <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-          ${currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })} remaining
+          {mask(currentBalance)} remaining
         </span>
       </div>
 
@@ -123,7 +125,7 @@ export default function PayoffChart({ timeline = [], startingBalance = 0, curren
         {hoveredPoint !== null && points[hoveredPoint] && (
           <div className="absolute top-3 left-4 bg-white dark:bg-slate-900 shadow-md border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs z-10 pointer-events-none">
             <div className="font-bold text-slate-900 dark:text-white">
-              ${points[hoveredPoint].data.remainingBalanceAfter.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              {mask(points[hoveredPoint].data.remainingBalanceAfter)}
             </div>
             <div className="text-[10px] text-slate-400">
               {new Date(points[hoveredPoint].data.date).toLocaleDateString('en-US', {
@@ -131,7 +133,7 @@ export default function PayoffChart({ timeline = [], startingBalance = 0, curren
                 day: 'numeric',
                 year: 'numeric',
               })}
-              {points[hoveredPoint].data.amount > 0 && ` · Paid $${points[hoveredPoint].data.amount.toLocaleString('en-US')}`}
+              {points[hoveredPoint].data.amount > 0 && ` · Paid ${mask(points[hoveredPoint].data.amount)}`}
             </div>
           </div>
         )}

@@ -9,6 +9,7 @@ import {
 import CategoryCard from './CategoryCard'
 import SectionDetailSheet from './SectionDetailSheet'
 import { HEROICON_MAP } from '../utils/heroicons'
+import { usePrivacy } from '../context/PrivacyContext'
 
 export default function CategoriesOverview({
   sections = [],
@@ -139,6 +140,7 @@ function formatPercent(val) {
 }
 
 function SectionRollupCard({ section, onInspectSection }) {
+  const { mask } = usePrivacy()
   const Icon = HEROICON_MAP[section.icon] || FolderIcon
   const isIncome = section.isIncome
   const hasBudget = section.totalBudget > 0
@@ -211,17 +213,10 @@ function SectionRollupCard({ section, onInspectSection }) {
         <div className="flex items-baseline justify-between mt-3">
           <div>
             <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              ${section.totalSpent.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              {mask(section.totalSpent)}
             </span>
             <span className="text-xs text-slate-400 ml-1.5 font-medium">
-              of $
-              {section.totalBudget.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              of {mask(section.totalBudget)}
             </span>
           </div>
 
@@ -230,16 +225,10 @@ function SectionRollupCard({ section, onInspectSection }) {
               ? isIncome
                 ? section.totalSpent >= section.totalBudget
                   ? 'Goal reached'
-                  : `$${(section.totalBudget - section.totalSpent).toLocaleString('en-US', {
-                      maximumFractionDigits: 0,
-                    })} left`
+                  : `${mask(section.totalBudget - section.totalSpent, { maximumFractionDigits: 0, minimumFractionDigits: 0 })} left`
                 : isOverBudget
-                ? `$${(section.totalSpent - section.totalBudget).toLocaleString('en-US', {
-                    maximumFractionDigits: 0,
-                  })} over`
-                : `$${(section.totalBudget - section.totalSpent).toLocaleString('en-US', {
-                    maximumFractionDigits: 0,
-                  })} left`
+                ? `${mask(section.totalSpent - section.totalBudget, { maximumFractionDigits: 0, minimumFractionDigits: 0 })} over`
+                : `${mask(section.totalBudget - section.totalSpent, { maximumFractionDigits: 0, minimumFractionDigits: 0 })} left`
               : 'No target set'}
           </span>
         </div>

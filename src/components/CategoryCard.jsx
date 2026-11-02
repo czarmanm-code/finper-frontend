@@ -1,4 +1,5 @@
 import { PencilSquareIcon, PlusIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { usePrivacy } from '../context/PrivacyContext'
 
 export default function CategoryCard({
   id,
@@ -14,6 +15,7 @@ export default function CategoryCard({
   onSelect,
   compact = false,
 }) {
+  const { mask } = usePrivacy()
   const isIncome = type === 'income'
   const hasBudget = Boolean(budget && budget > 0)
 
@@ -100,11 +102,11 @@ export default function CategoryCard({
         <div className="flex items-baseline justify-between text-xs mb-1.5">
           <div className="flex items-baseline gap-1">
             <span className="font-bold text-slate-900 dark:text-white">
-              ${spent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {mask(spent)}
             </span>
             {hasBudget ? (
               <span className="text-[11px] text-slate-400 font-medium">
-                / ${budget.toLocaleString('en-US')}
+                / {mask(budget, { maximumFractionDigits: 0 })}
               </span>
             ) : (
               <span className="text-[10px] text-slate-400 italic">No budget</span>
@@ -114,13 +116,13 @@ export default function CategoryCard({
           {hasBudget && (
             <span className="text-[10px] font-medium text-slate-400">
               {isIncome ? (
-                remaining > 0 ? `$${remaining.toLocaleString('en-US')} left` : 'Target hit'
+                remaining > 0 ? `${mask(remaining, { maximumFractionDigits: 0, minimumFractionDigits: 0 })} left` : 'Target hit'
               ) : isOverBudget ? (
                 <span className="text-rose-600 dark:text-rose-400 font-semibold">
-                  +${Math.abs(remaining).toLocaleString('en-US', { maximumFractionDigits: 0 })} over
+                  +{mask(Math.abs(remaining), { maximumFractionDigits: 0, minimumFractionDigits: 0 })} over
                 </span>
               ) : (
-                `$${remaining.toLocaleString('en-US', { maximumFractionDigits: 0 })} left`
+                `${mask(remaining, { maximumFractionDigits: 0, minimumFractionDigits: 0 })} left`
               )}
             </span>
           )}
@@ -192,11 +194,11 @@ export default function CategoryCard({
         <div className="flex items-baseline justify-between gap-2">
           <div className="flex items-baseline gap-1.5">
             <span className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-              ${spent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {mask(spent)}
             </span>
             {hasBudget && (
               <span className="text-xs text-slate-400 font-medium">
-                / ${budget.toLocaleString('en-US')}
+                / {mask(budget, { maximumFractionDigits: 0 })}
               </span>
             )}
           </div>
@@ -236,7 +238,7 @@ export default function CategoryCard({
                 <>
                   <span>
                     {remaining > 0
-                      ? `$${remaining.toLocaleString('en-US', { minimumFractionDigits: 2 })} remaining`
+                      ? `${mask(remaining)} remaining`
                       : 'Target reached!'}
                   </span>
                   <span className="font-medium text-slate-600 dark:text-slate-300">
@@ -247,14 +249,14 @@ export default function CategoryCard({
                 <div className="flex items-center gap-1 text-rose-600 dark:text-rose-400 font-medium">
                   <ExclamationTriangleIcon className="w-3.5 h-3.5" />
                   <span>
-                    ${Math.abs(remaining).toLocaleString('en-US', { minimumFractionDigits: 2 })} over budget
+                    {mask(Math.abs(remaining))} over budget
                   </span>
                 </div>
               ) : (
                 <>
                   <span>
                     <strong className="font-semibold text-slate-700 dark:text-slate-200">
-                      ${remaining.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      {mask(remaining)}
                     </strong>{' '}
                     remaining
                   </span>

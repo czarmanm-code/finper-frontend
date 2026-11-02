@@ -13,12 +13,14 @@ import {
   getLoanPayoffEstimate,
   getPortfolioPayoffEstimate,
 } from '../../utils/loanUtils'
+import { usePrivacy } from '../../context/PrivacyContext'
 
 export default function LoansTrajectoryChart({
   loans = [],
   selectedLoanId = null,
   onSelectLoan = null,
 }) {
+  const { mask } = usePrivacy()
   const [activeTab, setActiveTab] = useState(selectedLoanId || 'all')
   const [hoveredPoint, setHoveredPoint] = useState(null)
 
@@ -285,10 +287,10 @@ export default function LoansTrajectoryChart({
             Current Balance
           </span>
           <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-            ${metrics.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {mask(metrics.currentBalance)}
           </span>
           <span className="text-[11px] text-slate-400 block mt-0.5">
-            of ${metrics.totalAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })} initial
+            of {mask(metrics.totalAmount, { maximumFractionDigits: 0, minimumFractionDigits: 0 })} initial
           </span>
         </div>
 
@@ -297,7 +299,7 @@ export default function LoansTrajectoryChart({
             Total Amortized
           </span>
           <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
-            ${metrics.totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {mask(metrics.totalPaid)}
           </span>
           <span className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80 font-medium block mt-0.5">
             {metrics.progress}% paid off
@@ -324,7 +326,7 @@ export default function LoansTrajectoryChart({
             Installment Rate
           </span>
           <span className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-200">
-            ${metrics.monthlyCommitment.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+            {mask(metrics.monthlyCommitment, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
             <span className="text-xs text-slate-400 font-normal">/mo</span>
           </span>
           <span className="text-[11px] text-slate-400 block mt-0.5">
@@ -501,7 +503,7 @@ export default function LoansTrajectoryChart({
                 <span>{hoveredPoint.dateStr}</span>
               </div>
               <div className="text-sm font-black text-sky-400 dark:text-sky-600">
-                ${hoveredPoint.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {mask(hoveredPoint.balance)}
               </div>
               <div className="text-[10px] opacity-75">
                 {hoveredPoint.type === 'today'
