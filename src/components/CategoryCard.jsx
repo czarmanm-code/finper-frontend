@@ -16,6 +16,7 @@ export default function CategoryCard({
   compact = false,
 }) {
   const { mask } = usePrivacy()
+  const safeColor = typeof color === 'string' && color.trim() ? color : '#3b82f6'
   const isIncome = type === 'income'
   const hasBudget = Boolean(budget && budget > 0)
 
@@ -32,11 +33,11 @@ export default function CategoryCard({
   // Determine progress bar color based on status
   const getProgressBarColor = () => {
     if (isIncome) {
-      return spent >= budget && hasBudget ? '#10b981' : color
+      return spent >= budget && hasBudget ? '#10b981' : safeColor
     }
     if (isOverBudget) return '#ef4444' // Rose / Alert
     if (isNearLimit) return '#f59e0b' // Amber / Warning
-    return color
+    return safeColor
   }
 
   const barColor = getProgressBarColor()
@@ -44,7 +45,7 @@ export default function CategoryCard({
   if (compact) {
     return (
       <div
-        onClick={() => onSelect?.({ id, name, type, icon: Icon, budget, spent, color, sectionId, sectionName })}
+        onClick={() => onSelect?.({ id, name, type, icon: Icon, budget, spent, color: safeColor, sectionId, sectionName })}
         className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs p-3 hover:shadow-xs hover:border-sky-300 dark:hover:border-sky-700/60 transition-all group cursor-pointer"
       >
         {/* Top: Icon, Name, and Quick Status / Edit */}
@@ -54,8 +55,8 @@ export default function CategoryCard({
               <span
                 className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
                 style={{
-                  backgroundColor: color.startsWith('#') ? `${color}18` : 'rgba(59, 130, 246, 0.12)',
-                  color: color,
+                  backgroundColor: safeColor.startsWith('#') ? `${safeColor}18` : 'rgba(59, 130, 246, 0.12)',
+                  color: safeColor,
                 }}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -88,7 +89,7 @@ export default function CategoryCard({
               type="button"
               onClick={(e) => {
                 e.stopPropagation()
-                onSetTarget?.({ id, name, type, budget, color, icon: Icon })
+                onSetTarget?.({ id, name, type, budget, color: safeColor, icon: Icon })
               }}
               className="p-1 text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 rounded transition shrink-0 cursor-pointer"
               title={`Edit ${isIncome ? 'target' : 'budget'}`}
@@ -106,7 +107,7 @@ export default function CategoryCard({
             </span>
             {hasBudget ? (
               <span className="text-[11px] text-slate-400 font-medium">
-                / {mask(budget, { maximumFractionDigits: 0 })}
+                / {mask(budget, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
               </span>
             ) : (
               <span className="text-[10px] text-slate-400 italic">No budget</span>
@@ -144,7 +145,7 @@ export default function CategoryCard({
 
   return (
     <div
-      onClick={() => onSelect?.({ id, name, type, icon: Icon, budget, spent, color, sectionId, sectionName })}
+      onClick={() => onSelect?.({ id, name, type, icon: Icon, budget, spent, color: safeColor, sectionId, sectionName })}
       className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-5 flex flex-col justify-between hover:shadow-md hover:border-sky-300 dark:hover:border-sky-700/60 transition-all group cursor-pointer"
     >
       {/* Top Header: Category Icon, Name, Type & Edit Action */}
@@ -154,8 +155,8 @@ export default function CategoryCard({
             <span
               className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-xs"
               style={{
-                backgroundColor: color.startsWith('#') ? `${color}18` : 'rgba(59, 130, 246, 0.12)',
-                color: color,
+                backgroundColor: safeColor.startsWith('#') ? `${safeColor}18` : 'rgba(59, 130, 246, 0.12)',
+                color: safeColor,
               }}
             >
               <Icon className="w-5 h-5" />
@@ -180,7 +181,7 @@ export default function CategoryCard({
           type="button"
           onClick={(e) => {
             e.stopPropagation()
-            onSetTarget?.({ id, name, type, budget, color, icon: Icon })
+            onSetTarget?.({ id, name, type, budget, color: safeColor, icon: Icon })
           }}
           className="p-1.5 text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition shrink-0 cursor-pointer"
           title={`Edit ${isIncome ? 'target' : 'budget'}`}
@@ -198,7 +199,7 @@ export default function CategoryCard({
             </span>
             {hasBudget && (
               <span className="text-xs text-slate-400 font-medium">
-                / {mask(budget, { maximumFractionDigits: 0 })}
+                / {mask(budget, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
               </span>
             )}
           </div>

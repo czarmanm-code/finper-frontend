@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import Dashboard from './pages/Dashboard'
 import Categorias from './pages/Categorias'
 import Budget from './pages/Budget'
@@ -12,6 +13,16 @@ import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { DateProvider } from './context/DateContext'
 import { PrivacyProvider } from './context/PrivacyContext'
+import ErrorBoundary from './components/ErrorBoundary'
+import { forceResetScroll } from './utils/scrollLock'
+
+function ScrollReset() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    forceResetScroll()
+  }, [pathname])
+  return null
+}
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { user, isAdmin, isLoading, needsSetup } = useAuth()
@@ -41,12 +52,14 @@ function ProtectedRoute({ children, adminOnly = false }) {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <DateProvider>
-          <PrivacyProvider>
-            <BrowserRouter>
-          <Routes>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <DateProvider>
+            <PrivacyProvider>
+              <BrowserRouter>
+                <ScrollReset />
+                <Routes>
             {/* Public Auth Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -115,11 +128,12 @@ export default function App() {
 
             {/* Catch-all redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
+              </Routes>
+            </BrowserRouter>
           </PrivacyProvider>
-      </DateProvider>
-    </AuthProvider>
-  </ThemeProvider>
+        </DateProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </ErrorBoundary>
   )
 }

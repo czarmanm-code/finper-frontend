@@ -13,6 +13,7 @@ import {
 import { HEROICON_MAP } from '../utils/heroicons'
 import ConfirmDialog from './ui/ConfirmDialog'
 import { usePrivacy } from '../context/PrivacyContext'
+import { lockScroll, unlockScroll } from '../utils/scrollLock'
 
 export default function CategoryDetailSheet({
   isOpen,
@@ -57,14 +58,9 @@ export default function CategoryDetailSheet({
   // Lock body scroll when sheet is open to prevent background touch-bleed
   useEffect(() => {
     if (!isOpen) return
-    const originalOverflow = document.body.style.overflow
-    const originalOverscroll = document.body.style.overscrollBehavior
-    document.body.style.overflow = 'hidden'
-    document.body.style.overscrollBehavior = 'none'
-
+    lockScroll()
     return () => {
-      document.body.style.overflow = originalOverflow
-      document.body.style.overscrollBehavior = originalOverscroll
+      unlockScroll()
     }
   }, [isOpen])
 
@@ -310,7 +306,7 @@ export default function CategoryDetailSheet({
                     {isIncome ? 'Target Goal' : 'Budget Limit'}
                   </span>
                   <div className="text-lg font-semibold text-slate-600 dark:text-slate-300 mt-0.5">
-                    {mask(budget, { maximumFractionDigits: 0 })}
+                    {mask(budget, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
                   </div>
                 </div>
               )}

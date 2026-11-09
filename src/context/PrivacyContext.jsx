@@ -24,8 +24,6 @@ export function PrivacyProvider({ children }) {
       const {
         noPrefix = false,
         sign = '',
-        maximumFractionDigits = 2,
-        minimumFractionDigits = 2,
       } = options
 
       if (isPrivacyMode) {
@@ -34,10 +32,13 @@ export function PrivacyProvider({ children }) {
         return sign ? `${sign}$ ••••••` : '$ ••••••'
       }
 
+      const maxDigits = options.maximumFractionDigits ?? 2
+      const minDigits = Math.min(options.minimumFractionDigits ?? Math.min(2, maxDigits), maxDigits)
+
       const num = typeof amount === 'number' ? amount : Number(amount) || 0
       const formatted = num.toLocaleString('en-US', {
-        minimumFractionDigits,
-        maximumFractionDigits,
+        minimumFractionDigits: Math.max(0, minDigits),
+        maximumFractionDigits: Math.max(0, maxDigits),
       })
 
       if (noPrefix) return formatted

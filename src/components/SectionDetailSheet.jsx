@@ -12,6 +12,7 @@ import {
 import { HEROICON_MAP } from '../utils/heroicons'
 import { useDateFilter } from '../context/DateContext'
 import { usePrivacy } from '../context/PrivacyContext'
+import { lockScroll, unlockScroll } from '../utils/scrollLock'
 
 function formatPercent(val) {
   if (!val || val <= 0) return '0%'
@@ -56,14 +57,9 @@ export default function SectionDetailSheet({
   // Lock body scroll when sheet is open to prevent background touch-bleed
   useEffect(() => {
     if (!isOpen) return
-    const originalOverflow = document.body.style.overflow
-    const originalOverscroll = document.body.style.overscrollBehavior
-    document.body.style.overflow = 'hidden'
-    document.body.style.overscrollBehavior = 'none'
-
+    lockScroll()
     return () => {
-      document.body.style.overflow = originalOverflow
-      document.body.style.overscrollBehavior = originalOverscroll
+      unlockScroll()
     }
   }, [isOpen])
 

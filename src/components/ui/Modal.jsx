@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import { lockScroll, unlockScroll } from '../../utils/scrollLock'
 
 export default function Modal({ isOpen = true, title, onClose, children, maxWidth = 'max-w-md' }) {
   useEffect(() => {
@@ -15,14 +16,9 @@ export default function Modal({ isOpen = true, title, onClose, children, maxWidt
   // Lock body scroll when modal is open
   useEffect(() => {
     if (!isOpen) return
-    const originalOverflow = document.body.style.overflow
-    const originalOverscroll = document.body.style.overscrollBehavior
-    document.body.style.overflow = 'hidden'
-    document.body.style.overscrollBehavior = 'none'
-
+    lockScroll()
     return () => {
-      document.body.style.overflow = originalOverflow
-      document.body.style.overscrollBehavior = originalOverscroll
+      unlockScroll()
     }
   }, [isOpen])
 

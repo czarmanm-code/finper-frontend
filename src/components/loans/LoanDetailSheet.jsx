@@ -13,6 +13,7 @@ import PayoffChart from './PayoffChart'
 import ConfirmDialog from '../ui/ConfirmDialog'
 import { formatFrequency } from '../../utils/loanUtils'
 import { usePrivacy } from '../../context/PrivacyContext'
+import { lockScroll, unlockScroll } from '../../utils/scrollLock'
 
 export default function LoanDetailSheet({
   isOpen,
@@ -57,14 +58,9 @@ export default function LoanDetailSheet({
   // Lock body scroll when sheet is open to prevent background touch-bleed
   useEffect(() => {
     if (!isOpen) return
-    const originalOverflow = document.body.style.overflow
-    const originalOverscroll = document.body.style.overscrollBehavior
-    document.body.style.overflow = 'hidden'
-    document.body.style.overscrollBehavior = 'none'
-
+    lockScroll()
     return () => {
-      document.body.style.overflow = originalOverflow
-      document.body.style.overscrollBehavior = originalOverscroll
+      unlockScroll()
     }
   }, [isOpen])
 
